@@ -1,0 +1,15 @@
+{
+  "name": "tg-shop-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute tg-shop-db --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute tg-shop-db --local --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
