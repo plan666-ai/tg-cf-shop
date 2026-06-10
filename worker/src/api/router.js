@@ -64,6 +64,16 @@ export async function handleApiRequest(request, env) {
       return await handleSettingsApi(request, db, path, method, corsHeaders);
     }
 
+    // 系统管理 API
+    if (path.startsWith('/api/system')) {
+      return await handleSystemApi(request, db, env, path, method, corsHeaders);
+    }
+
+    // Bot 管理 API
+    if (path.startsWith('/api/bot')) {
+      return await handleBotApi(request, db, env, path, method, corsHeaders);
+    }
+
     // 支付回调 (不需要认证)
     if (path === '/api/payment/notify' && method === 'POST') {
       return await handlePaymentNotify(request, db, env, corsHeaders);
@@ -230,4 +240,71 @@ async function handlePaymentNotify(request, db, env, corsHeaders) {
     console.error('Payment notify error:', error);
     return new Response('fail', { status: 500 });
   }
+}
+
+// 系统管理 API
+async function handleSystemApi(request, db, env, path, method, corsHeaders) {
+  // POST /api/system/factory-reset - 恢复出厂设置
+  if (path === '/api/system/factory-reset' && method === 'POST') {
+    try {
+      // 物理删除所有数据
+      const tables = ['logs', 'commissions', 'redeem_cards', 'cards', 'orders', 'products', 'categories', 'users', 'settings'];
+      for (const table of tables) {
+        await db.db.prepare(`DELETE FROM ${table}`).run();
+      }
+
+      // 重新初始化数据库
+      await db.db.prepare(`
+        INSERT INTO settings (key, value, description) VALUES
+        ('shop_name', 'TG Shop', '商店名称'),
+        ('welcome_message', '👋 欢迎来到小店！\n\n请选择：', '欢迎消息'),
+        ('welcome_parse_mode', 'HTML', '欢迎消息格式(HTML/MarkdownV2)'),
+        ('support_username', '', '客服用户名'),
+        ('commission_rate', '10', '佣金比例'),
+        ('order_expire_minutes', '30', '订单过期时间(分钟)'),
+        ('min_withdraw', '10', '最低提现金额(元)'),
+        ('payment_stars_enabled', '1', 'Telegram Stars支付开关')
+      `).run();
+
+      return jsonResponse({ message: '恢复出厂设置成功' }, 200, corsHeaders);
+    } catch (error) {
+      console.error('Factory reset error:', error);
+      return jsonResponse({ error: '恢复出厂设置失败: ' + error.message }, 500, corsHeaders);
+    }
+  }
+
+  return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
+}
+
+// Bot 管理 API
+async function handleBotApi(request, db, env, path, method, corsHeaders) {
+  // POST /api/bot/set-webhook - 设置 Webhook
+  if (path === '/api/bot/set-webhook' && method === 'POST') {
+    try {
+      const botToken = await db.getSetting('bot_token') || env.BOT_TOKEN;
+      const webhookSecret = await db.getSetting('webhook_secret') || env.WEBHOOK_SECRET;
+
+      // 获取 Worker 域名
+      const url = new URL(request.url);
+      const workerUrl = `${url.protocol}//${url.host}`;
+
+      const webhookUrl = `${workerUrl}/webhook?secret=${webhookSecret}`;
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: webhookUrl,
+          secret_token: webhookSecret
+        })
+      });
+
+      const result = await response.json();
+      return jsonResponse(result, 200, corsHeaders);
+    } catch (error) {
+      console.error('Set webhook error:', error);
+      return jsonResponse({ error: '设置 Webhook 失败: ' + error.message }, 500, corsHeaders);
+    }
+  }
+
+  return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
 }

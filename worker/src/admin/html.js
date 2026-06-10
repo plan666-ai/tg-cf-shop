@@ -763,6 +763,37 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
             <button class="btn btn-outline" onclick="previewLogin()"><i class="fas fa-eye"></i> 预览</button>
           </div>
         </div>
+        <!-- Bot 配置 -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><h3><i class="fas fa-robot"></i> Bot 配置</h3></div>
+          <div class="card-body">
+            <div style="background:var(--light);padding:16px;border-radius:8px;margin-bottom:16px;border-left:4px solid #3b82f6">
+              <p style="margin:0;color:#1e40af;font-size:13px"><i class="fas fa-info-circle"></i> 修改 Bot Token 后需要重新设置 Webhook</p>
+            </div>
+            <div class="form-group"><label>Bot Token</label><input id="set-bot_token" type="password" placeholder="从 @BotFather 获取"></div>
+            <div class="form-group"><label>Webhook Secret</label><input id="set-webhook_secret" type="password" placeholder="自定义密钥"></div>
+            <button class="btn btn-primary" onclick="saveBotConfig()"><i class="fas fa-save"></i> 保存 Bot 配置</button>
+            <button class="btn btn-outline" onclick="setWebhook()"><i class="fas fa-link"></i> 重新设置 Webhook</button>
+          </div>
+        </div>
+        <!-- 危险操作 -->
+        <div class="card" style="margin-top:20px;border:2px solid #ef4444">
+          <div class="card-header" style="background:#fef2f2"><h3 style="color:#dc2626"><i class="fas fa-exclamation-triangle"></i> 危险操作</h3></div>
+          <div class="card-body">
+            <div style="background:#fef2f2;padding:16px;border-radius:8px;margin-bottom:16px;border-left:4px solid #ef4444">
+              <p style="margin:0;color:#991b1b;font-size:13px"><i class="fas fa-exclamation-triangle"></i> <strong>警告：</strong>恢复出厂设置将<strong>物理删除</strong>所有数据，包括：</p>
+              <ul style="margin:8px 0 0;color:#991b1b;font-size:13px;padding-left:20px">
+                <li>所有用户数据</li>
+                <li>所有订单记录</li>
+                <li>所有商品和卡密</li>
+                <li>所有充值卡</li>
+                <li>所有系统设置</li>
+              </ul>
+              <p style="margin:8px 0 0;color:#dc2626;font-weight:600;font-size:13px">此操作不可恢复！请谨慎操作！</p>
+            </div>
+            <button class="btn btn-danger" onclick="factoryReset()" style="background:#dc2626;color:white;border:none;padding:10px 24px"><i class="fas fa-trash-alt"></i> 一键恢复出厂设置</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -1650,6 +1681,39 @@ async function savePaymentSettings(){
     }
   }
   toast('支付配置已保存')
+}
+
+// 保存 Bot 配置
+async function saveBotConfig(){
+  const keys=['bot_token','webhook_secret'];
+  for(const k of keys){const el=document.getElementById('set-'+k);if(el&&el.value)await fetch(API+'/settings',{method:'PUT',headers:h(),body:JSON.stringify({key:k,value:el.value})})}
+  toast('Bot 配置已保存')
+}
+
+// 设置 Webhook
+async function setWebhook(){
+  const r=await fetch(API+'/bot/set-webhook',{method:'POST',headers:h()});
+  const d=await r.json();
+  if(d.ok){toast('Webhook 设置成功')}else{toast('Webhook 设置失败: '+(d.error||'未知错误'),'error')}
+}
+
+// 一键恢复出厂设置
+async function factoryReset(){
+  if(!confirm('⚠️ 警告：此操作将物理删除所有数据！\n\n包括：\n- 所有用户数据\n- 所有订单记录\n- 所有商品和卡密\n- 所有充值卡\n- 所有系统设置\n\n此操作不可恢复！确定要继续吗？'))return;
+  if(!confirm('最后确认：确定要恢复出厂设置吗？\n\n请输入 "RESET" 确认：'))return;
+
+  try{
+    const r=await fetch(API+'/system/factory-reset',{method:'POST',headers:h()});
+    const d=await r.json();
+    if(d.message){
+      toast('恢复出厂设置成功，系统将在3秒后刷新');
+      setTimeout(()=>location.reload(),3000);
+    }else{
+      toast('恢复失败: '+(d.error||'未知错误'),'error');
+    }
+  }catch(e){
+    toast('恢复失败: '+e.message,'error');
+  }
 }
 
 function openM(id){document.getElementById(id).classList.add('show')}
