@@ -505,7 +505,7 @@ async function processPurchase(db, env, chatId, messageId, user, productId, quan
     await db.setSetting('order_payment_' + order.order_no, 'yipay');
 
     // 构建易支付链接
-    const payUrl = `${yipayUrl}/submit.php?pid=${yipayPid}&type=wxpay&out_trade_no=${order.order_no}&notify_url=${encodeURIComponent(env.WORKER_URL || 'https://tg-shop-bot.plan99669996.workers.dev')}/api/payment/notify&name=${encodeURIComponent(product.name)}&money=${Number(amount).toFixed(2)}`;
+    const payUrl = `${yipayUrl}/submit.php?pid=${yipayPid}&type=wxpay&out_trade_no=${order.order_no}&notify_url=${encodeURIComponent(env.WORKER_URL || '')}/api/payment/notify&name=${encodeURIComponent(product.name)}&money=${Number(amount).toFixed(2)}`;
 
     let caption = '💳 <b>易支付</b>\n\n';
     caption += `订单号: <code>${order.order_no}</code>\n`;
@@ -546,7 +546,7 @@ async function processPurchase(db, env, chatId, messageId, user, productId, quan
     await db.setSetting('order_payment_' + order.order_no, 'codepay');
 
     // 构建码支付链接
-    const payUrl = `${codepayUrl}/submit.php?id=${codepayId}&type=wxpay&out_trade_no=${order.order_no}&notify_url=${encodeURIComponent(env.WORKER_URL || 'https://tg-shop-bot.plan99669996.workers.dev')}/api/payment/notify&name=${encodeURIComponent(product.name)}&money=${Number(amount).toFixed(2)}`;
+    const payUrl = `${codepayUrl}/submit.php?id=${codepayId}&type=wxpay&out_trade_no=${order.order_no}&notify_url=${encodeURIComponent(env.WORKER_URL || '')}/api/payment/notify&name=${encodeURIComponent(product.name)}&money=${Number(amount).toFixed(2)}`;
 
     let caption = '📱 <b>码支付</b>\n\n';
     caption += `订单号: <code>${order.order_no}</code>\n`;
