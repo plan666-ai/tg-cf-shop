@@ -1699,7 +1699,7 @@ async function setWebhook(){
 
 // 一键恢复出厂设置
 async function factoryReset(){
-  if(!confirm('⚠️ 警告：此操作将物理删除所有数据！\n\n包括：\n- 所有用户数据\n- 所有订单记录\n- 所有商品和卡密\n- 所有充值卡\n- 所有系统设置\n\n此操作不可恢复！确定要继续吗？'))return;
+  if(!confirm('[警告] 此操作将物理删除所有数据！\n\n包括：\n- 所有用户数据\n- 所有订单记录\n- 所有商品和卡密\n- 所有充值卡\n- 所有系统设置\n\n此操作不可恢复！确定要继续吗？'))return;
   if(!confirm('最后确认：确定要恢复出厂设置吗？\n\n请输入 "RESET" 确认：'))return;
 
   try{

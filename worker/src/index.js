@@ -11,6 +11,11 @@ export default {
       return handleCors();
     }
 
+    // favicon
+    if (url.pathname === '/favicon.ico') {
+      return new Response(null, { status: 204 });
+    }
+
     if (url.pathname === '/webhook' && request.method === 'POST') {
       return handleBotUpdate(request, env);
     }
