@@ -32,7 +32,46 @@ export class Database {
     const result = await this.db.prepare(
       'SELECT * FROM users WHERE user_id = ?'
     ).bind(userId).first();
+    
+    // 如果用户存在，确保 successful_count 同步
+    if (result) {
+      await this.syncSuccessfulCount(userId, result);
+    }
+    
     return result;
+  }
+
+  // 同步用户的真实消费成功次数（兼容老数据）
+  async syncSuccessfulCount(userId, user = null) {
+    if (!user) {
+      user = await this.db.prepare('SELECT successful_count FROM users WHERE user_id = ?').bind(userId).first();
+    }
+    if (!user) return;
+
+    // 获取用户真实的已完成订单数
+    const realCount = await this.db.prepare(
+      "SELECT COUNT(*) as count FROM orders WHERE user_id = ? AND status = 'delivered'"
+    ).bind(userId).first();
+
+    const realSuccessfulCount = realCount?.count || 0;
+    const currentCount = user.successful_count || 0;
+
+    // 如果数据库中的值与实际不符，更新
+    if (realSuccessfulCount !== currentCount) {
+      await this.db.prepare(
+        'UPDATE users SET successful_count = ? WHERE user_id = ?'
+      ).bind(realSuccessfulCount, userId).run();
+    }
+
+    return realSuccessfulCount;
+  }
+
+  // 获取用户的真实消费成功次数（直接查询）
+  async getRealSuccessfulCount(userId) {
+    const result = await this.db.prepare(
+      "SELECT COUNT(*) as count FROM orders WHERE user_id = ? AND status = 'delivered'"
+    ).bind(userId).first();
+    return result?.count || 0;
   }
 
   async createUser(userId, username, firstName, inviteCode = null) {
@@ -446,11 +485,28 @@ export class Database {
   }
 
   // 用户统计
-  async getUsers(limit = 50, offset = 0) {
-    const result = await this.db.prepare(
-      'SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).bind(limit, offset).all();
-    return result.results;
+  async getUsers(limit = 50, offset = 0, search = null) {
+    let query = 'SELECT * FROM users';
+    const params = [];
+
+    if (search) {
+      query += ' WHERE user_id LIKE ? OR username LIKE ? OR first_name LIKE ? OR invite_code LIKE ?';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const result = await this.db.prepare(query).bind(...params).all();
+    const users = result.results;
+
+    // 批量同步消费成功计次（兼容老数据）
+    for (const user of users) {
+      await this.syncSuccessfulCount(user.user_id, user);
+    }
+
+    return users;
   }
 
   async getUserCount() {
