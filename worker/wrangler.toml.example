@@ -1,0 +1,13 @@
+name = "tg-shop-bot"
+main = "src/index.js"
+compatibility_date = "2026-06-09"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tg-shop-db"
+database_id = "你的数据库ID"
+
+[vars]
+BOT_TOKEN = "你的Bot Token"
+ADMIN_PASSWORD = "你的管理后台密码"
+WEBHOOK_SECRET = "你的Webhook密钥"
