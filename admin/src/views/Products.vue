@@ -8,7 +8,8 @@
       </el-button>
     </div>
 
-    <el-table :data="products" v-loading="loading" stripe>
+    <!-- PC端表格 -->
+    <el-table :data="products" v-loading="loading" stripe class="pc-table">
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="name" label="商品名称" />
       <el-table-column prop="category_name" label="分类" width="120" />
@@ -40,6 +41,44 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 手机端卡片列表 -->
+    <div class="mobile-cards" v-loading="loading">
+      <div v-for="product in products" :key="product.id" class="product-card">
+        <div class="product-card-header">
+          <span class="product-name">{{ product.name }}</span>
+          <el-tag :type="product.is_active ? 'success' : 'info'" size="small">
+            {{ product.is_active ? '上架' : '下架' }}
+          </el-tag>
+        </div>
+        <div class="product-card-body">
+          <div class="info-row">
+            <span class="label">分类</span>
+            <span class="value">{{ product.category_name || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">价格</span>
+            <span class="value price">¥{{ (product.price / 100).toFixed(2) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">库存</span>
+            <span class="value">{{ product.stock_count }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">销量</span>
+            <span class="value">{{ product.sales_count }}</span>
+          </div>
+        </div>
+        <div class="product-card-actions">
+          <el-button size="small" @click="editProduct(product)">编辑</el-button>
+          <el-button size="small" @click="manageCards(product)">卡密</el-button>
+          <el-button size="small" :type="product.is_active ? 'danger' : 'success'" @click="toggleProduct(product)">
+            {{ product.is_active ? '下架' : '上架' }}
+          </el-button>
+        </div>
+      </div>
+      <el-empty v-if="!loading && products.length === 0" description="暂无商品" />
+    </div>
 
     <!-- 添加/编辑对话框 -->
     <el-dialog v-model="showAddDialog" :title="editingId ? '编辑商品' : '添加商品'" width="600px">
@@ -290,5 +329,122 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* 手机端卡片 */
+.mobile-cards {
+  display: none;
+}
+
+.product-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.product-card:active {
+  transform: scale(0.98);
+  background: #f5f7fa;
+}
+
+.product-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.product-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-body {
+  margin-bottom: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.info-row .label {
+  color: #909399;
+}
+
+.info-row .value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.info-row .value.price {
+  color: #F56C6C;
+  font-weight: 700;
+}
+
+.product-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.product-card-actions .el-button {
+  flex: 1;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .products {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .pc-table {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+
+  :deep(.el-input-number) {
+    width: 100%;
+  }
+
+  .cards-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
 }
 </style>

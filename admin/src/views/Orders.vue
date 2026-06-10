@@ -14,7 +14,8 @@
       </div>
     </div>
 
-    <el-table :data="orders" v-loading="loading" stripe>
+    <!-- PC端表格 -->
+    <el-table :data="orders" v-loading="loading" stripe class="pc-table">
       <el-table-column prop="order_no" label="订单号" width="200" />
       <el-table-column prop="username" label="用户" width="120" />
       <el-table-column prop="product_name" label="商品" />
@@ -55,6 +56,37 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 手机端卡片列表 -->
+    <div class="mobile-cards" v-loading="loading">
+      <div v-for="order in orders" :key="order.id" class="order-card" @click="viewDetail(order)">
+        <div class="order-card-header">
+          <span class="order-no">{{ order.order_no }}</span>
+          <el-tag :type="getStatusType(order.status)" size="small">
+            {{ getStatusText(order.status) }}
+          </el-tag>
+        </div>
+        <div class="order-card-body">
+          <div class="order-info-row">
+            <span class="label">商品</span>
+            <span class="value">{{ order.product_name || '-' }}</span>
+          </div>
+          <div class="order-info-row">
+            <span class="label">用户</span>
+            <span class="value">{{ order.username || '-' }}</span>
+          </div>
+          <div class="order-info-row">
+            <span class="label">数量</span>
+            <span class="value">{{ order.quantity }}</span>
+          </div>
+        </div>
+        <div class="order-card-footer">
+          <span class="order-amount">¥{{ (order.amount / 100).toFixed(2) }}</span>
+          <span class="order-time">{{ formatDate(order.created_at) }}</span>
+        </div>
+      </div>
+      <el-empty v-if="!loading && orders.length === 0" description="暂无订单" />
+    </div>
 
     <!-- 订单详情对话框 -->
     <el-dialog v-model="showDetailDialog" title="订单详情" width="600px">
@@ -173,5 +205,118 @@ onMounted(() => {
 .filters {
   display: flex;
   gap: 10px;
+}
+
+/* 手机端卡片 */
+.mobile-cards {
+  display: none;
+}
+
+.order-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order-card:active {
+  transform: scale(0.98);
+  background: #f5f7fa;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.order-no {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  font-family: monospace;
+}
+
+.order-card-body {
+  margin-bottom: 10px;
+}
+
+.order-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.order-info-row .label {
+  color: #909399;
+}
+
+.order-info-row .value {
+  color: #303133;
+  font-weight: 500;
+  max-width: 60%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.order-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #409EFF;
+}
+
+.order-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .orders {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  .pc-table {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
 }
 </style>

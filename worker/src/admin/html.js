@@ -4,7 +4,7 @@ export function getAdminHTML() {
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TG Shop Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -41,26 +41,35 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 ::-webkit-scrollbar-thumb { background:var(--gray-light); border-radius:3px; }
 ::-webkit-scrollbar-thumb:hover { background:var(--gray); }
 
-/* Login */
-.login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); position:relative; overflow:hidden; }
-.login-page::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 60%); animation:rotate 30s linear infinite; }
-@keyframes rotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-.login-card { background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); padding:48px; border-radius:20px; box-shadow:var(--shadow-xl); width:420px; position:relative; z-index:1; }
-.login-logo { text-align:center; margin-bottom:32px; }
-.login-logo .icon { width:64px; height:64px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:16px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px; }
-.login-logo .icon i { font-size:28px; color:white; }
-.login-logo h1 { font-size:24px; font-weight:700; color:var(--dark); }
-.login-logo p { color:var(--gray); font-size:14px; margin-top:4px; }
-.input-group { margin-bottom:20px; position:relative; }
-.input-group label { display:block; font-size:13px; font-weight:500; color:var(--dark-3); margin-bottom:6px; }
-.input-group .input-wrapper { position:relative; }
-.input-group i.input-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--gray-light); font-size:16px; }
-.input-group input { width:100%; padding:12px 14px 12px 42px; border:2px solid var(--light-2); border-radius:10px; font-size:14px; font-family:inherit; transition:var(--transition); background:var(--white); }
-.input-group input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,0.1); }
-.btn-login { width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit; }
-.btn-login:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(99,102,241,0.4); }
-.btn-login:active { transform:translateY(0); }
-.login-error { color:var(--danger); font-size:13px; text-align:center; margin-top:12px; display:none; }
+/* Login - Glass + Slide-in */
+.login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0a0f1e; position:relative; padding:1.5rem; overflow:hidden; }
+.login-bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; background:linear-gradient(135deg,#0a0f1e 0%,#1a1f35 50%,#0d1525 100%); }
+.login-bg::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle at 30% 40%,rgba(99,102,241,0.08) 0%,transparent 50%),radial-gradient(circle at 70% 60%,rgba(14,165,233,0.06) 0%,transparent 50%); animation:bgFloat 20s ease-in-out infinite; }
+@keyframes bgFloat { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-2%,1%)} }
+.login-glass { position:fixed; top:0; left:0; width:100%; height:100%; backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px); z-index:1; }
+.login-page .card-wrapper { display:flex; width:960px; max-width:90vw; border-radius:24px; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.5); position:relative; z-index:2; }
+.login-page .card-left { flex:1; background:linear-gradient(135deg,#1e2b3c 0%,#0f1a24 100%); padding:2.5rem 2rem; display:flex; flex-direction:column; justify-content:center; color:white; transform:translateX(-100%); opacity:0; animation:slideFromL 0.65s cubic-bezier(0.23,1,0.32,1) forwards; position:relative; overflow:hidden; }
+.login-page .card-left::before { content:''; position:absolute; top:-80px; right:-80px; width:250px; height:250px; background:radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%); border-radius:50%; }
+.login-page .card-left::after { content:''; position:absolute; bottom:-60px; left:-40px; width:180px; height:180px; background:radial-gradient(circle,rgba(14,165,233,0.1) 0%,transparent 70%); border-radius:50%; }
+.login-page .card-right { flex:1; background:#ffffff; padding:2.5rem 2rem; display:flex; flex-direction:column; justify-content:center; transform:translateX(100%); opacity:0; animation:slideFromR 0.65s cubic-bezier(0.23,1,0.32,1) forwards; }
+@keyframes slideFromL { 0%{transform:translateX(-100%);opacity:0} 100%{transform:translateX(0);opacity:1} }
+@keyframes slideFromR { 0%{transform:translateX(100%);opacity:0} 100%{transform:translateX(0);opacity:1} }
+.login-page .brand-info { position:relative; z-index:1; }
+.login-page .brand-info h2 { font-size:2rem; font-weight:700; margin-bottom:0.5rem; letter-spacing:-0.3px; }
+.login-page .brand-info .brand-desc { font-size:0.9rem; opacity:0.8; border-left:3px solid #4c9aff; padding-left:12px; margin-top:8px; margin-bottom:2rem; }
+.login-page .feature-list { list-style:none; margin:0; padding:0; }
+.login-page .feature-list li { margin-bottom:1.1rem; display:flex; align-items:center; gap:12px; font-size:0.92rem; opacity:0.9; }
+.login-page .feature-list li i { width:22px; text-align:center; font-size:16px; color:#4c9aff; }
+.login-page .brand-footer { margin-top:auto; padding-top:2rem; font-size:0.78rem; opacity:0.5; font-style:italic; text-align:center; }
+.login-page .form-area h3 { font-size:2rem; font-weight:700; color:#1f2937; margin-bottom:0.5rem; }
+.login-page .form-area .form-sub { color:#6b7280; font-size:1rem; margin-bottom:2rem; border-bottom:1px solid #e5e7eb; display:inline-block; padding-bottom:6px; }
+.login-page .form-area .input-group { margin-bottom:1.6rem; }
+.login-page .form-area .input-group label { display:block; font-size:1rem; font-weight:500; color:#374151; margin-bottom:0.6rem; }
+.login-page .form-area .input-group input { width:100%; padding:1rem 1.1rem; border:1px solid #e2e8f0; border-radius:14px; font-size:1.05rem; transition:all 0.2s; background:#f9fafb; outline:none; font-family:inherit; }
+.login-page .form-area .input-group input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.15); background:#fff; }
+.login-page .btn-login { width:100%; background:#1e2b3c; color:white; border:none; padding:1rem; font-size:1.1rem; font-weight:600; border-radius:40px; cursor:pointer; transition:all 0.25s; margin-top:0.5rem; font-family:inherit; letter-spacing:2px; }
+.login-page .btn-login:hover { background:#0f1a24; transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.15); }
+.login-page .form-hint { margin-top:1.8rem; font-size:0.8rem; text-align:center; color:#9ca3af; }
 
 /* Layout */
 .app { display:none; min-height:100vh; }
@@ -91,16 +100,23 @@ body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; backgrou
 .header { height:var(--header-height); background:white; border-bottom:1px solid var(--light-2); display:flex; align-items:center; justify-content:space-between; padding:0 32px; position:sticky; top:0; z-index:50; }
 .header-left { display:flex; align-items:center; gap:16px; }
 .header-left h1 { font-size:20px; font-weight:700; color:var(--dark); }
+.hamburger { display:none; width:24px; height:18px; flex-direction:column; justify-content:space-between; cursor:pointer; flex-shrink:0; }
+.hamburger span { display:block; width:100%; height:2.5px; background:var(--dark); border-radius:2px; transition:all 0.3s; transform-origin:center; }
+.hamburger.open span:first-child { transform:translateY(8px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
+.hamburger.open span:last-child { transform:translateY(-8px) rotate(-45deg); }
+.sidebar-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99; backdrop-filter:blur(2px); }
+.sidebar-overlay.show { display:block; }
 .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--gray); }
 .breadcrumb span { color:var(--dark); font-weight:500; }
 .header-right { display:flex; align-items:center; gap:12px; }
 .header-btn { width:40px; height:40px; border-radius:10px; border:1px solid var(--light-2); background:white; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:var(--transition); color:var(--gray); position:relative; }
 .header-btn:hover { border-color:var(--primary); color:var(--primary); }
 .header-btn .badge { position:absolute; top:-4px; right:-4px; width:18px; height:18px; background:var(--danger); border-radius:50%; font-size:10px; color:white; display:flex; align-items:center; justify-content:center; }
-.content { padding:28px 32px; }
+.content { padding:24px; }
 
 /* Stats */
-.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:28px; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; width:100%; }
 .stat-card { background:white; border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); transition:var(--transition); border:1px solid var(--light-2); position:relative; overflow:hidden; }
 .stat-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; }
 .stat-card:nth-child(1)::before { background:linear-gradient(90deg,var(--primary),var(--primary-light)); }
@@ -193,14 +209,99 @@ tbody tr:last-child td { border-bottom:none; }
 .empty i { font-size:48px; color:var(--light-2); margin-bottom:16px; }
 .empty p { color:var(--gray); font-size:14px; }
 
+/* Checkbox */
+.checkbox { width:16px; height:16px; cursor:pointer; accent-color:var(--primary); vertical-align:middle; }
+th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:20px; padding-right:10px; }
+
+/* Batch Bar */
+.batch-bar { display:none; align-items:center; gap:12px; padding:12px 24px; background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(99,102,241,0.03)); border-bottom:1px solid rgba(99,102,241,0.15); }
+.batch-bar.show { display:flex; }
+.batch-bar .batch-count { font-size:13px; color:var(--primary); font-weight:600; margin-right:4px; }
+.batch-bar .btn { margin-left:4px; }
+
+/* Pagination */
+.pagination-wrap { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-top:1px solid var(--light-2); background:var(--light); border-radius:0 0 var(--radius) var(--radius); flex-wrap:wrap; gap:12px; }
+.pg-info { font-size:13px; color:var(--gray); }
+.pg-info strong { color:var(--dark-3); font-weight:600; }
+.pg-nav { display:flex; align-items:center; gap:4px; }
+.pg-nav button { min-width:34px; height:34px; padding:0 8px; border:1px solid var(--light-2); background:white; border-radius:8px; font-size:13px; cursor:pointer; transition:var(--transition); color:var(--dark-3); font-weight:500; }
+.pg-nav button:hover:not(:disabled):not(.active) { border-color:var(--primary); color:var(--primary); background:rgba(99,102,241,0.04); }
+.pg-nav button.active { background:var(--primary); color:white; border-color:var(--primary); box-shadow:0 2px 8px rgba(99,102,241,0.3); }
+.pg-nav button:disabled { opacity:0.35; cursor:not-allowed; }
+.pg-nav .pg-ellipsis { min-width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--gray-light); font-size:13px; }
+.pg-right { display:flex; align-items:center; gap:8px; }
+.pg-right label { font-size:13px; color:var(--gray); }
+.pg-right select { height:34px; border:1px solid var(--light-2); border-radius:8px; padding:0 10px; font-size:13px; font-family:inherit; background:white; cursor:pointer; color:var(--dark-3); }
+.pg-right select:focus { outline:none; border-color:var(--primary); }
+.pg-right .pg-jump { display:flex; align-items:center; gap:6px; }
+.pg-right .pg-jump span { font-size:13px; color:var(--gray); }
+.pg-right .pg-jump input { width:48px; height:34px; border:1px solid var(--light-2); border-radius:8px; text-align:center; font-size:13px; font-family:inherit; color:var(--dark-3); }
+.pg-right .pg-jump input:focus { outline:none; border-color:var(--primary); }
+.pg-right .pg-jump button { min-width:auto; height:34px; padding:0 12px; border:1px solid var(--light-2); background:white; border-radius:8px; font-size:12px; cursor:pointer; transition:var(--transition); color:var(--dark-3); font-weight:600; }
+.pg-right .pg-jump button:hover { border-color:var(--primary); color:var(--primary); }
+
+/* Confirm Dialog */
+.confirm-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:1100; justify-content:center; align-items:center; }
+.confirm-overlay.show { display:flex; animation:fadeIn 0.2s; }
+.confirm-dialog { background:white; border-radius:16px; padding:32px; width:400px; text-align:center; box-shadow:var(--shadow-xl); animation:slideUp 0.3s; }
+.confirm-dialog .confirm-icon { margin-bottom:16px; }
+.confirm-dialog .confirm-icon i { font-size:48px; color:var(--warning); }
+.confirm-dialog .confirm-msg { font-size:15px; color:var(--dark-3); margin-bottom:24px; line-height:1.6; }
+.confirm-dialog .confirm-btns { display:flex; gap:12px; justify-content:center; }
+
 /* Responsive */
 @media(max-width:1200px) { .stats-grid{grid-template-columns:repeat(2,1fr)} }
-@media(max-width:768px) {
+@media(max-width:780px) {
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
-  .stats-grid{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
+  .content{padding:10px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+  .stat-card{padding:12px 10px;border-radius:10px}
+  .stat-card .value{font-size:20px}
+  .stat-card .label{font-size:11px;margin-bottom:0}
+  .stat-card .icon{width:32px;height:32px;font-size:14px}
+  .stat-card .trend{font-size:11px}
+  .card{border-radius:10px;margin-bottom:10px}
+  .card-header{padding:12px 14px;flex-wrap:wrap;gap:6px}
+  .card-header h3{font-size:14px}
+  .card-body{padding:10px 12px}
+  .card-body.no-padding{padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .card-body.no-padding table{min-width:650px}
+  table{font-size:12px}
+  table th{font-size:11px;padding:8px 5px}
+  table td{padding:7px 5px;font-size:12px}
+  table .checkbox-col{width:28px}
+  .form-row{grid-template-columns:1fr;gap:0}
+  .form-group{margin-bottom:12px}
+  .form-group label{font-size:12px;margin-bottom:4px}
+  .input-group input,.input-group select,.input-group textarea{font-size:14px;padding:10px 10px;border-radius:8px}
+  .btn{padding:7px 12px;font-size:12px;border-radius:8px}
+  .btn-sm{padding:5px 8px;font-size:11px}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:0;border-bottom-width:2px}
+  .tabs .tab{white-space:nowrap;padding:8px 12px;font-size:12px}
+  .hamburger{display:flex}
+  .header{padding:0 10px;height:50px}
+  .header-left h1{font-size:15px}
+  .header-right{gap:8px}
+  .header-btn{width:34px;height:34px;border-radius:8px}
+  .modal-content{width:100%;max-height:100vh;margin:0;border-radius:16px 16px 0 0;position:fixed;bottom:0}
+  .modal-body{padding:14px;max-height:80vh}
+  .modal-header{padding:14px 16px}
+  .page-header{flex-direction:column;gap:8px;align-items:flex-start;padding:0}
+  .page-header h2{font-size:16px}
+  .batch-bar{flex-wrap:wrap;gap:4px;font-size:11px;padding:8px 10px}
+  .pagination{flex-wrap:wrap;gap:3px}
+  .pagination button{padding:5px 9px;font-size:11px}
+  .login-page .card-wrapper{flex-direction:column;max-width:100vw;border-radius:0;min-height:100vh}
+  .login-page .card-left{transform:translateY(-60%);animation:slideTop 0.6s cubic-bezier(0.23,1,0.32,1) forwards;padding:1.5rem 1.2rem}
+  .login-page .card-right{transform:translateY(60%);animation:slideBot 0.6s cubic-bezier(0.23,1,0.32,1) forwards;padding:1.5rem 1.2rem}
+  @keyframes slideTop{0%{transform:translateY(-100%);opacity:0}100%{transform:translateY(0);opacity:1}}
+  @keyframes slideBot{0%{transform:translateY(100%);opacity:0}100%{transform:translateY(0);opacity:1}}
+  .login-page .card-left{border-radius:0}
+  .topbar{padding:0 10px;height:50px}
+  .topbar .brand{font-size:14px}
+  .topbar .user-info span{display:none}
 }
 </style>
 </head>
@@ -208,29 +309,41 @@ tbody tr:last-child td { border-bottom:none; }
 
 <!-- Login Page -->
 <div id="loginPage" class="login-page">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="icon"><i class="fas fa-rocket"></i></div>
-      <h1>TG Shop Admin</h1>
-      <p>Telegram 卡密销售管理系统</p>
+  <div class="login-bg"></div>
+  <div class="login-glass"></div>
+  <div class="card-wrapper">
+    <div class="card-left">
+      <div class="brand-info">
+        <h2><i class="fas fa-rocket"></i> TG Shop</h2>
+        <p class="brand-desc">数据驱动 &middot; 智能零售管理后台</p>
+      </div>
+      <ul class="feature-list">
+        <li><i class="fas fa-chart-pie"></i> 实时数据看板与趋势分析</li>
+        <li><i class="fas fa-bolt"></i> 高效订单与商品管理</li>
+        <li><i class="fas fa-shield-alt"></i> 安全认证与权限控制</li>
+        <li><i class="fas fa-cloud"></i> 云端部署，多端同步</li>
+      </ul>
+      <div class="brand-footer">-- Secure &middot; Stable &middot; Scalable --</div>
     </div>
-    <div class="input-group">
-      <label>管理员密码</label>
-      <div class="input-wrapper">
-        <i class="fas fa-lock input-icon"></i>
-        <input type="password" id="loginPassword" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="card-right">
+      <div class="form-area">
+        <h3>安全验证</h3>
+        <div class="form-sub">请输入您的管理员密码</div>
+        <div class="input-group">
+          <label><i class="fas fa-lock"></i> 管理员密码</label>
+          <input type="password" id="loginPassword" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn-login" onclick="doLogin()">验 证 并 登 录 <i class="fas fa-arrow-right"></i></button>
+        <div class="form-hint" id="loginDate"></div>
       </div>
     </div>
-    <button class="btn-login" onclick="doLogin()">
-      <i class="fas fa-arrow-right"></i> 登录系统
-    </button>
-    <div id="loginError" class="login-error"></div>
   </div>
 </div>
 
 <!-- App -->
 <div id="app" class="app">
-  <aside class="sidebar">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="brand">
         <div class="brand-icon"><i class="fas fa-rocket"></i></div>
@@ -261,6 +374,9 @@ tbody tr:last-child td { border-bottom:none; }
         <div class="nav-item" onclick="nav('cards')" data-page="cards">
           <i class="fas fa-key"></i><span>卡密管理</span>
         </div>
+        <div class="nav-item" onclick="nav('redeem')" data-page="redeem">
+          <i class="fas fa-ticket-alt"></i><span>充值卡管理</span>
+        </div>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">用户与系统</div>
@@ -286,6 +402,7 @@ tbody tr:last-child td { border-bottom:none; }
   <main class="main">
     <header class="header">
       <div class="header-left">
+        <div class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
         <h1 id="pageTitle">数据看板</h1>
       </div>
       <div class="header-right">
@@ -343,11 +460,12 @@ tbody tr:last-child td { border-bottom:none; }
 
       <!-- Orders -->
       <div id="page-orders" style="display:none">
-        <div class="card">
+        <div class="card" data-pg="orders">
           <div class="card-header"><h3><i class="fas fa-shopping-cart"></i> 全部订单</h3></div>
+          <div class="batch-bar" data-batch="orders"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchDeleteOrders()"><i class="fas fa-trash"></i> 批量删除</button></div>
           <div class="card-body no-padding">
             <table>
-              <thead><tr><th>订单号</th><th>用户</th><th>商品</th><th>数量</th><th>金额</th><th>支付方式</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('orders',this)"></th><th>订单号</th><th>用户</th><th>商品</th><th>数量</th><th>金额</th><th>支付方式</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
               <tbody id="ordersList"></tbody>
             </table>
           </div>
@@ -356,14 +474,15 @@ tbody tr:last-child td { border-bottom:none; }
 
       <!-- Products -->
       <div id="page-products" style="display:none">
-        <div class="card">
+        <div class="card" data-pg="products">
           <div class="card-header">
             <h3><i class="fas fa-box"></i> 商品列表</h3>
             <button class="btn btn-primary btn-sm" onclick="openProductModal()"><i class="fas fa-plus"></i> 添加商品</button>
           </div>
+          <div class="batch-bar" data-batch="products"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchDeleteProducts()"><i class="fas fa-trash"></i> 批量删除</button><button class="btn btn-outline btn-sm" onclick="batchToggleProducts(false)"><i class="fas fa-eye-slash"></i> 批量下架</button><button class="btn btn-success btn-sm" onclick="batchToggleProducts(true)"><i class="fas fa-eye"></i> 批量上架</button></div>
           <div class="card-body no-padding">
             <table>
-              <thead><tr><th>ID</th><th>商品名称</th><th>分类</th><th>价格</th><th>库存</th><th>销量</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('products',this)"></th><th>ID</th><th>商品名称</th><th>分类</th><th>价格</th><th>库存</th><th>销量</th><th>状态</th><th>操作</th></tr></thead>
               <tbody id="productsList"></tbody>
             </table>
           </div>
@@ -414,9 +533,89 @@ tbody tr:last-child td { border-bottom:none; }
         </div>
       </div>
 
+      <!-- Redeem Cards -->
+      <div id="page-redeem" style="display:none">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-header"><div class="stat-icon"><i class="fas fa-ticket-alt"></i></div></div><div class="stat-value" id="rc-total">0</div><div class="stat-label">总充值卡</div></div>
+          <div class="stat-card"><div class="stat-header"><div class="stat-icon"><i class="fas fa-check-circle"></i></div></div><div class="stat-value" id="rc-unused">0</div><div class="stat-label">未使用</div></div>
+          <div class="stat-card"><div class="stat-header"><div class="stat-icon"><i class="fas fa-user-check"></i></div></div><div class="stat-value" id="rc-used">0</div><div class="stat-label">已使用</div></div>
+          <div class="stat-card"><div class="stat-header"><div class="stat-icon"><i class="fas fa-coins"></i></div></div><div class="stat-value" id="rc-total-amount">¥0</div><div class="stat-label">总面额</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-plus-circle"></i> 生成充值卡</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>面额（元）</label>
+                <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-amount&apos;).value=10">¥10</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-amount&apos;).value=50">¥50</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-amount&apos;).value=100">¥100</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-amount&apos;).value=200">¥200</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-amount&apos;).value=500">¥500</button>
+                </div>
+                <input id="rc-amount" type="number" min="0.01" step="0.01" value="10" placeholder="输入自定义面额">
+              </div>
+              <div class="form-group">
+                <label>数量</label>
+                <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-count&apos;).value=1">1张</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-count&apos;).value=5">5张</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-count&apos;).value=10">10张</button>
+                  <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-count&apos;).value=50">50张</button>
+                </div>
+                <input id="rc-count" type="number" min="1" max="100" value="1" placeholder="1-100">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn btn-primary" onclick="generateRedeemCards()"><i class="fas fa-magic"></i> 生成充值卡</button>
+              <span id="rc-gen-hint" style="font-size:13px;color:var(--gray)"></span>
+            </div>
+          </div>
+        </div>
+        <div id="rc-gen-result" style="display:none" class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-check-circle" style="color:var(--success)"></i> 生成结果</h3>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline btn-sm" onclick="copyAllGenCards()"><i class="fas fa-copy"></i> 复制全部</button>
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById(&apos;rc-gen-result&apos;).style.display=&apos;none&apos;"><i class="fas fa-times"></i> 关闭</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="rc-gen-cards" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
+        </div>
+        <div class="card" data-pg="redeem">
+          <div class="card-header">
+            <h3><i class="fas fa-list"></i> 充值卡列表</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="rc-filter" onchange="filterRedeemCards()" style="height:34px;border:1px solid var(--light-2);border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;background:white;cursor:pointer">
+                <option value="all">全部状态</option>
+                <option value="unused">未使用</option>
+                <option value="used">已使用</option>
+              </select>
+              <div style="position:relative">
+                <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-light);font-size:12px"></i>
+                <input id="rc-search" placeholder="搜索卡码..." oninput="filterRedeemCards()" style="height:34px;border:1px solid var(--light-2);border-radius:8px;padding:0 10px 0 30px;font-size:13px;font-family:inherit;width:180px">
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="loadRedeemCards()"><i class="fas fa-sync-alt"></i></button>
+            </div>
+          </div>
+          <div class="batch-bar" data-batch="redeem"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchDeleteRedeemCards()"><i class="fas fa-trash"></i> 批量删除</button><button class="btn btn-outline btn-sm" onclick="batchCopyRedeemCards()"><i class="fas fa-copy"></i> 批量复制未使用卡码</button></div>
+          <div class="card-body no-padding">
+            <table>
+              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('redeem',this)"></th><th>ID</th><th>充值卡码</th><th>面额</th><th>状态</th><th>使用者</th><th>使用时间</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody id="redeemCardsList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Users -->
       <div id="page-users" style="display:none">
-        <div class="card">
+        <div class="card" data-pg="users">
           <div class="card-header">
             <h3><i class="fas fa-users"></i> 用户管理</h3>
             <div style="display:flex;gap:10px;align-items:center">
@@ -430,9 +629,10 @@ tbody tr:last-child td { border-bottom:none; }
               <button class="btn btn-outline btn-sm" onclick="document.getElementById('userSearch').value='';loadUsers()"><i class="fas fa-redo"></i> 重置</button>
             </div>
           </div>
+          <div class="batch-bar" data-batch="users"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchBanUsers(true)"><i class="fas fa-ban"></i> 批量封禁</button><button class="btn btn-success btn-sm" onclick="batchBanUsers(false)"><i class="fas fa-check"></i> 批量解封</button></div>
           <div class="card-body no-padding">
             <table>
-              <thead><tr><th>用户ID</th><th>用户名/昵称</th><th>余额</th><th>订单数</th><th>消费总额</th><th>邀请码</th><th>邀请人</th><th>注册时间</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('users',this)"></th><th>用户ID</th><th>用户名/昵称</th><th>余额</th><th>订单数</th><th>消费总额</th><th>邀请码</th><th>邀请人</th><th>注册时间</th><th>状态</th><th>操作</th></tr></thead>
               <tbody id="usersList"></tbody>
             </table>
           </div>
@@ -451,8 +651,26 @@ tbody tr:last-child td { border-bottom:none; }
               <div class="form-group"><label>佣金比例 (%)</label><input id="set-commission_rate" type="number"></div>
               <div class="form-group"><label>订单过期时间 (分钟)</label><input id="set-order_expire_minutes" type="number"></div>
             </div>
-            <div class="form-group"><label>最低提现金额 (分)</label><input id="set-min_withdraw" type="number"></div>
+            <div class="form-group"><label>最低提现金额（元）</label><input id="set-min_withdraw" type="number"></div>
             <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> 保存设置</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><h3><i class="fas fa-sign-in-alt"></i> 登录页面配置</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>品牌名称</label><input id="set-login_brand" placeholder="TG Shop"></div>
+            <div class="form-group"><label>品牌描述</label><input id="set-login_desc" placeholder="数据驱动 · 智能零售管理后台"></div>
+            <div class="form-group"><label>功能1</label><input id="set-login_feat1" placeholder="实时数据看板与趋势分析"></div>
+            <div class="form-group"><label>功能2</label><input id="set-login_feat2" placeholder="高效订单与商品管理"></div>
+            <div class="form-group"><label>功能3</label><input id="set-login_feat3" placeholder="安全认证与权限控制"></div>
+            <div class="form-group"><label>功能4</label><input id="set-login_feat4" placeholder="云端部署，多端同步"></div>
+            <div class="form-group"><label>底部文字</label><input id="set-login_footer" placeholder="-- Secure · Stable · Scalable --"></div>
+            <div class="form-row">
+              <div class="form-group"><label>左侧背景色</label><input id="set-login_left_bg" placeholder="#1e2b3c"></div>
+              <div class="form-group"><label>按钮颜色</label><input id="set-login_btn_bg" placeholder="#1e2b3c"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveLoginSettings()"><i class="fas fa-save"></i> 保存登录页配置</button>
+            <button class="btn btn-outline" onclick="previewLogin()"><i class="fas fa-eye"></i> 预览</button>
           </div>
         </div>
       </div>
@@ -473,8 +691,8 @@ tbody tr:last-child td { border-bottom:none; }
       <div class="form-group"><label>商品名称</label><input id="p-name" placeholder="请输入商品名称"></div>
       <div class="form-group"><label>商品描述</label><textarea id="p-desc" rows="2" placeholder="请输入商品描述"></textarea></div>
       <div class="form-row">
-        <div class="form-group"><label>销售价格 (分)</label><input id="p-price" type="number" placeholder="如 1000 = ¥10.00"></div>
-        <div class="form-group"><label>原价 (分)</label><input id="p-original" type="number" placeholder="可选"></div>
+        <div class="form-group"><label>销售价格（元）</label><input id="p-price" type="number" step="0.01" min="0" placeholder="如 9.99"></div>
+        <div class="form-group"><label>原价（元）</label><input id="p-original" type="number" step="0.01" min="0" placeholder="可选"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -506,10 +724,13 @@ tbody tr:last-child td { border-bottom:none; }
 
 <!-- User Detail Modal -->
 <div id="userDetailModal" class="modal-overlay">
-  <div class="modal" style="width:700px">
+  <div class="modal" style="width:800px">
     <div class="modal-header">
       <h3><i class="fas fa-user"></i> 用户详情</h3>
-      <button class="modal-close" onclick="closeM('userDetailModal')"><i class="fas fa-times"></i></button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="exportUserData()" title="导出用户全部数据"><i class="fas fa-download"></i> 导出</button>
+        <button class="modal-close" onclick="closeM('userDetailModal')"><i class="fas fa-times"></i></button>
+      </div>
     </div>
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
@@ -531,7 +752,7 @@ tbody tr:last-child td { border-bottom:none; }
         </div>
         <div style="background:var(--light);padding:16px;border-radius:8px">
           <div style="font-size:12px;color:var(--gray);margin-bottom:4px">邀请码</div>
-          <div style="font-size:16px;font-weight:600" id="ud-invite">-</div>
+          <div style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><span id="ud-invite">-</span><i class="fas fa-copy" style="font-size:14px;color:var(--primary);cursor:pointer" onclick="navigator.clipboard.writeText(document.getElementById(&apos;ud-invite&apos;).textContent);toast(&apos;已复制邀请码&apos;)"></i></div>
         </div>
         <div style="background:var(--light);padding:16px;border-radius:8px">
           <div style="font-size:12px;color:var(--gray);margin-bottom:4px">邀请人数</div>
@@ -540,18 +761,21 @@ tbody tr:last-child td { border-bottom:none; }
       </div>
 
       <!-- Tabs -->
-      <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--light-2);padding-bottom:0">
-        <div class="tab-btn active" onclick="switchUserTab('balance',this)" style="padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;border-bottom:2px solid var(--primary);margin-bottom:-2px;color:var(--primary)">余额操作</div>
-        <div class="tab-btn" onclick="switchUserTab('orders',this)" style="padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">订单记录</div>
-        <div class="tab-btn" onclick="switchUserTab('edit',this)" style="padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px">编辑信息</div>
+      <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--light-2);padding-bottom:0;overflow-x:auto">
+        <div class="tab-btn active" onclick="switchUserTab('balance',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid var(--primary);margin-bottom:-2px;color:var(--primary);white-space:nowrap">余额操作</div>
+        <div class="tab-btn" onclick="switchUserTab('orders',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap">订单记录</div>
+        <div class="tab-btn" onclick="switchUserTab('redeem',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap">充值卡记录</div>
+        <div class="tab-btn" onclick="switchUserTab('logs',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap">操作日志</div>
+        <div class="tab-btn" onclick="switchUserTab('invite',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap">邀请管理</div>
+        <div class="tab-btn" onclick="switchUserTab('edit',this)" style="padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap">编辑信息</div>
       </div>
 
       <!-- Balance Tab -->
       <div id="ud-tab-balance">
         <div class="form-row">
           <div class="form-group">
-            <label>调整金额（分）</label>
-            <input id="ud-amount" type="number" placeholder="正数增加，负数扣减">
+            <label>调整金额（元）</label>
+            <input id="ud-amount" type="number" step="0.01" placeholder="输入金额，如 10 或 -10">
           </div>
           <div class="form-group">
             <label>调整原因</label>
@@ -559,12 +783,12 @@ tbody tr:last-child td { border-bottom:none; }
           </div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-          <button class="btn btn-success btn-sm" onclick="quickBalance(1000)"><i class="fas fa-plus"></i> ¥10</button>
-          <button class="btn btn-success btn-sm" onclick="quickBalance(5000)"><i class="fas fa-plus"></i> ¥50</button>
-          <button class="btn btn-success btn-sm" onclick="quickBalance(10000)"><i class="fas fa-plus"></i> ¥100</button>
-          <button class="btn btn-success btn-sm" onclick="quickBalance(50000)"><i class="fas fa-plus"></i> ¥500</button>
-          <button class="btn btn-danger btn-sm" onclick="quickBalance(-1000)"><i class="fas fa-minus"></i> ¥10</button>
-          <button class="btn btn-danger btn-sm" onclick="quickBalance(-5000)"><i class="fas fa-minus"></i> ¥50</button>
+          <button class="btn btn-success btn-sm" onclick="quickBalance(10)"><i class="fas fa-plus"></i> ¥10</button>
+          <button class="btn btn-success btn-sm" onclick="quickBalance(50)"><i class="fas fa-plus"></i> ¥50</button>
+          <button class="btn btn-success btn-sm" onclick="quickBalance(100)"><i class="fas fa-plus"></i> ¥100</button>
+          <button class="btn btn-success btn-sm" onclick="quickBalance(500)"><i class="fas fa-plus"></i> ¥500</button>
+          <button class="btn btn-danger btn-sm" onclick="quickBalance(-10)"><i class="fas fa-minus"></i> ¥10</button>
+          <button class="btn btn-danger btn-sm" onclick="quickBalance(-50)"><i class="fas fa-minus"></i> ¥50</button>
         </div>
         <button class="btn btn-primary" onclick="adjustBalance()"><i class="fas fa-check"></i> 确认调整</button>
       </div>
@@ -590,6 +814,53 @@ tbody tr:last-child td { border-bottom:none; }
         </div>
         <button class="btn btn-primary" onclick="saveUserEdit()"><i class="fas fa-save"></i> 保存修改</button>
       </div>
+
+      <!-- Redeem Cards Tab -->
+      <div id="ud-tab-redeem" style="display:none">
+        <table>
+          <thead><tr><th>充值卡码</th><th>面额</th><th>使用时间</th></tr></thead>
+          <tbody id="ud-redeem-list"></tbody>
+        </table>
+      </div>
+
+      <!-- Logs Tab -->
+      <div id="ud-tab-logs" style="display:none">
+        <table>
+          <thead><tr><th>操作</th><th>详情</th><th>时间</th></tr></thead>
+          <tbody id="ud-logs-list"></tbody>
+        </table>
+      </div>
+
+      <!-- Invite Tab -->
+      <div id="ud-tab-invite" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:var(--light);padding:12px;border-radius:8px">
+            <div style="font-size:12px;color:var(--gray);margin-bottom:4px">我的邀请码</div>
+            <div style="font-size:18px;font-weight:700;color:var(--primary)" id="ud-my-invite">-</div>
+          </div>
+          <div style="background:var(--light);padding:12px;border-radius:8px">
+            <div style="font-size:12px;color:var(--gray);margin-bottom:4px">邀请人</div>
+            <div style="font-size:16px;font-weight:600" id="ud-my-inviter">-</div>
+          </div>
+        </div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">邀请的用户</div>
+        <table>
+          <thead><tr><th>用户ID</th><th>用户名</th><th>消费总额</th><th>注册时间</th></tr></thead>
+          <tbody id="ud-invited-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div id="confirmOverlay" class="confirm-overlay">
+  <div class="confirm-dialog">
+    <div class="confirm-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="confirmResolve(false)">取消</button>
+      <button class="btn btn-danger" onclick="confirmResolve(true)">确定</button>
     </div>
   </div>
 </div>
@@ -601,9 +872,25 @@ const API='/api';
 let TOKEN=localStorage.getItem('admin_token');
 let CATS=[];
 
+(function updateLoginDate(){
+  var el=document.getElementById('loginDate');
+  if(el){
+    var now=new Date();
+    var y=now.getFullYear();
+    var m=String(now.getMonth()+1).padStart(2,'0');
+    var d=String(now.getDate()).padStart(2,'0');
+    var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][now.getDay()];
+    var hh=String(now.getHours()).padStart(2,'0');
+    var mm=String(now.getMinutes()).padStart(2,'0');
+    var ss=String(now.getSeconds()).padStart(2,'0');
+    el.textContent=y+'-'+m+'-'+d+' '+wd+' '+hh+':'+mm+':'+ss;
+  }
+  setTimeout(updateLoginDate,1000);
+})();
+
 if(TOKEN) checkAuth(); else showLogin();
 
-function showLogin(){document.getElementById('loginPage').style.display='flex';document.getElementById('app').style.display='none'}
+function showLogin(){document.getElementById('loginPage').style.display='flex';document.getElementById('app').style.display='none';try{var s=localStorage.getItem('login_settings');if(s){loginSettings=JSON.parse(s);applyLoginSettings()}}catch(e){}}
 function showApp(){document.getElementById('loginPage').style.display='none';document.getElementById('app').style.display='block'}
 
 async function checkAuth(){
@@ -612,21 +899,21 @@ async function checkAuth(){
 }
 
 async function doLogin(){
-  const pw=document.getElementById('loginPassword').value;
-  if(!pw){document.getElementById('loginError').textContent='请输入密码';document.getElementById('loginError').style.display='block';return}
+  var pw=document.getElementById('loginPassword').value.trim();
+  if(!pw){alert('Please enter password');return}
   try{
-    const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
-    const d=await r.json();
-    if(d.token){TOKEN=d.token;localStorage.setItem('admin_token',TOKEN);showApp();loadDashboard();toast('登录成功','success')}
-    else{document.getElementById('loginError').textContent=d.error||'密码错误';document.getElementById('loginError').style.display='block'}
-  }catch(e){document.getElementById('loginError').textContent='网络错误';document.getElementById('loginError').style.display='block'}
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+    var d=await r.json();
+    if(d.token){TOKEN=d.token;localStorage.setItem('admin_token',TOKEN);showApp();loadDashboard();toast('Login success','success')}
+    else{alert(d.error||'Wrong password')}
+  }catch(e){alert('Login failed: network error')}
 }
 
 function doLogout(){TOKEN=null;localStorage.removeItem('admin_token');showLogin()}
 
 function h(){return{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}}
 function fmt(d){return d?new Date(d).toLocaleString('zh-CN'):'-'}
-function money(v){return'¥'+(v/100).toFixed(2)}
+function money(v){return'¥'+Number(v).toFixed(2)}
 
 function toast(msg,type='success'){
   const c=document.getElementById('toasts');
@@ -637,7 +924,138 @@ function toast(msg,type='success'){
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(100%)';setTimeout(()=>t.remove(),300)},3000)
 }
 
-const pages={dashboard:'数据看板',orders:'订单管理',products:'商品管理',categories:'分类管理',cards:'卡密管理',users:'用户管理',settings:'系统设置'};
+let _confirmResolve=null;
+function showConfirm(msg){
+  return new Promise(resolve=>{
+    _confirmResolve=resolve;
+    document.getElementById('confirmMsg').textContent=msg;
+    document.getElementById('confirmOverlay').classList.add('show');
+  });
+}
+function confirmResolve(val){
+  document.getElementById('confirmOverlay').classList.remove('show');
+  if(_confirmResolve){_confirmResolve(val);_confirmResolve=null}
+}
+
+// ========== 通用分页和批量选择系统 ==========
+const PG={page:{},pageSize:{},selected:{},allData:{}};
+
+function pgInit(key,defaultSize){
+  if(!PG.page[key])PG.page[key]=1;
+  if(!PG.pageSize[key])PG.pageSize[key]=defaultSize||10;
+  if(!PG.selected[key])PG.selected[key]=new Set();
+  if(!PG.allData[key])PG.allData[key]=[];
+}
+
+function pgSetData(key,data){
+  PG.allData[key]=data||[];
+  const total=PG.allData[key].length;
+  const ps=PG.pageSize[key];
+  const maxPage=Math.max(1,Math.ceil(total/ps));
+  if(PG.page[key]>maxPage)PG.page[key]=maxPage;
+}
+
+function pgGetData(key){
+  const d=PG.allData[key]||[];
+  const ps=PG.pageSize[key];
+  const start=(PG.page[key]-1)*ps;
+  return d.slice(start,start+ps);
+}
+
+function pgTotal(key){return(PG.allData[key]||[]).length}
+function pgPages(key){return Math.max(1,Math.ceil(pgTotal(key)/PG.pageSize[key]))}
+
+function pgRender(key,renderFn,containerId){
+  const items=pgGetData(key);
+  document.getElementById(containerId).innerHTML=items.length?renderFn(items):'<tr><td colspan="20"><div class="empty"><i class="fas fa-inbox"></i><p>暂无数据</p></div></td></tr>';
+  pgRenderControls(key,containerId);
+  pgUpdateBatchBar(key);
+}
+
+function pgRenderControls(key,containerId){
+  const el=document.getElementById(containerId);
+  const card=el.closest('.card');
+  let pgEl=card.querySelector('.pagination-wrap');
+  if(!pgEl){pgEl=document.createElement('div');pgEl.className='pagination-wrap';card.appendChild(pgEl)}
+  const total=pgTotal(key);
+  const ps=PG.pageSize[key];
+  const cur=PG.page[key];
+  const pages=pgPages(key);
+  const start=total?((cur-1)*ps+1):0;
+  const end=Math.min(cur*ps,total);
+
+  let btns='';
+  btns+='<button '+(cur<=1?'disabled':'')+' onclick="pgGo(&apos;'+key+'&apos;,1,&apos;'+containerId+'&apos;)">&laquo;</button>';
+  btns+='<button '+(cur<=1?'disabled':'')+' onclick="pgGo(&apos;'+key+'&apos;,'+(cur-1)+',&apos;'+containerId+'&apos;)">&lsaquo;</button>';
+  const range=pgRange(cur,pages,3);
+  for(const p of range){
+    if(p==='...')btns+='<span class="pg-ellipsis">...</span>';
+    else btns+='<button class="'+(p===cur?'active':'')+'" onclick="pgGo(&apos;'+key+'&apos;,'+p+',&apos;'+containerId+'&apos;)">'+p+'</button>';
+  }
+  btns+='<button '+(cur>=pages?'disabled':'')+' onclick="pgGo(&apos;'+key+'&apos;,'+(cur+1)+',&apos;'+containerId+'&apos;)">&rsaquo;</button>';
+  btns+='<button '+(cur>=pages?'disabled':'')+' onclick="pgGo(&apos;'+key+'&apos;,'+pages+',&apos;'+containerId+'&apos;)">&raquo;</button>';
+
+  const sizes=[10,20,50,100].map(s=>'<option value="'+s+'" '+(ps==s?'selected':'')+'>'+s+'</option>').join('');
+  pgEl.innerHTML='<div class="pg-info">显示 '+start+'-'+end+' / 共 <strong>'+total+'</strong> 条</div><div class="pg-nav">'+btns+'</div><div class="pg-right"><label><select onchange="pgSize(&apos;'+key+'&apos;,this.value,&apos;'+containerId+'&apos;)">'+sizes+'</select> 条/页</label><div class="pg-jump"><span>跳转</span><input type="number" min="1" max="'+pages+'" value="'+cur+'" onkeydown="if(event.key==='+"'Enter'"+')pgGo(&apos;'+key+'&apos;,this.value,&apos;'+containerId+'&apos;)"><button onclick="pgGo(&apos;'+key+'&apos;,this.previousElementSibling.value,&apos;'+containerId+'&apos;)">确定</button></div></div>';
+}
+
+function pgRange(cur,total,around){
+  const range=[];
+  const start=Math.max(2,cur-around);
+  const end=Math.min(total-1,cur+around);
+  range.push(1);
+  if(start>2)range.push('...');
+  for(let i=start;i<=end;i++)range.push(i);
+  if(end<total-1)range.push('...');
+  if(total>1)range.push(total);
+  return range;
+}
+
+function pgGo(key,page,containerId){
+  page=Math.max(1,Math.min(parseInt(page)||1,pgPages(key)));
+  PG.page[key]=page;
+  PG.selected[key].clear();
+  window['_pgRender_'+key]();
+}
+
+function pgSize(key,size,containerId){
+  PG.pageSize[key]=parseInt(size);
+  PG.page[key]=1;
+  PG.selected[key].clear();
+  window['_pgRender_'+key]();
+}
+
+function pgToggleAll(key,el){
+  const items=pgGetData(key);
+  if(el.checked){items.forEach(i=>PG.selected[key].add(i.id||i.order_no||i.code))}
+  else{items.forEach(i=>PG.selected[key].delete(i.id||i.order_no||i.code))}
+  const tbody=document.getElementById(window['_pgContainer_'+key]);
+  if(tbody){tbody.querySelectorAll('input[type="checkbox"]').forEach((cb,idx)=>{if(idx<items.length)cb.checked=el.checked})}
+  pgUpdateBatchBar(key);
+}
+
+function pgToggle(key,id,el){
+  if(el.checked)PG.selected[key].add(id);
+  else PG.selected[key].delete(id);
+  pgUpdateBatchBar(key);
+  const selAll=document.querySelector('[data-pg="'+key+'"] .pg-select-all');
+  if(selAll){const items=pgGetData(key);selAll.checked=items.every(i=>PG.selected[key].has(i.id||i.order_no||i.code))}
+}
+
+function pgUpdateBatchBar(key){
+  const bar=document.querySelector('[data-batch="'+key+'"]');
+  if(!bar)return;
+  const count=PG.selected[key].size;
+  bar.classList.toggle('show',count>0);
+  const span=bar.querySelector('span');
+  if(span)span.textContent='已选择 '+count+' 项';
+}
+
+function pgGetSelected(key){return Array.from(PG.selected[key])}
+
+// ========== 通用分页和批量选择系统 ==========
+
+const pages={dashboard:'数据看板',orders:'订单管理',products:'商品管理',categories:'分类管理',cards:'卡密管理',redeem:'充值卡管理',users:'用户管理',settings:'系统设置'};
 function nav(page){
   document.querySelectorAll('[id^="page-"]').forEach(p=>p.style.display='none');
   document.getElementById('page-'+page).style.display='block';
@@ -649,6 +1067,7 @@ function nav(page){
   if(page==='products')loadProducts();
   if(page==='categories')loadCategories();
   if(page==='cards')loadCardProducts();
+  if(page==='redeem')loadRedeemCards();
   if(page==='users')loadUsers();
   if(page==='settings')loadSettings();
 }
@@ -679,18 +1098,52 @@ function statusTag(s){
 
 async function loadOrders(){
   const r=await fetch(API+'/orders',{headers:h()});const d=await r.json();
-  document.getElementById('ordersList').innerHTML=(d.data||[]).map(o=>'<tr><td><code>'+o.order_no+'</code></td><td>'+(o.username||o.user_id)+'</td><td>'+(o.product_name||'-')+'</td><td>'+(o.quantity||1)+'</td><td>'+money(o.amount)+'</td><td>'+(o.payment_method==='stars'?'Stars':o.payment_method==='balance'?'余额':'-')+'</td><td>'+statusTag(o.status)+'</td><td>'+fmt(o.created_at)+'</td><td class="actions">'+(o.status==='paid'||o.status==='delivered'?'<button class="btn btn-danger btn-sm" onclick="refundOrder('+o.id+')">退款</button>':'')+'</td></tr>').join('')||'<tr><td colspan="9"><div class="empty"><i class="fas fa-inbox"></i><p>暂无订单</p></div></td></tr>';
+  pgInit('orders',10);pgSetData('orders',d.data||[]);
+  window['_pgRender_orders']=()=>pgRender('orders',renderOrders,'ordersList');
+  window['_pgRenderItems_orders']=renderOrders;
+  window['_pgContainer_orders']='ordersList';
+  pgRender('orders',renderOrders,'ordersList');
+}
+function renderOrders(items){
+  return items.map(o=>'<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.orders.has(o.order_no)?'checked':'')+' onchange="pgToggle(&apos;orders&apos;,&apos;'+o.order_no+'&apos;,this)"></td><td><code>'+o.order_no+'</code></td><td>'+(o.username||o.user_id)+'</td><td>'+(o.product_name||'-')+'</td><td>'+(o.quantity||1)+'</td><td>'+money(o.amount)+'</td><td>'+(o.payment_method==='stars'?'Stars':o.payment_method==='balance'?'balance':'-')+'</td><td>'+statusTag(o.status)+'</td><td>'+fmt(o.created_at)+'</td><td class="actions">'+(o.status==='paid'||o.status==='delivered'?'<button class="btn btn-danger btn-sm" onclick="refundOrder('+o.id+')">Refund</button>':'')+'</td></tr>').join('');
+}
+async function batchDeleteOrders(){
+  const sel=pgGetSelected('orders');
+  if(!sel.length)return;
+  if(!await showConfirm('确定删除选中的 '+sel.length+' 个订单？'))return;
+  for(const id of sel){await fetch(API+'/orders/'+id,{method:'DELETE',headers:h()})}
+  toast('已删除 '+sel.length+' 个订单');PG.selected.orders.clear();loadOrders()
 }
 
 async function refundOrder(id){
-  if(!confirm('确定要退款吗？'))return;
+  if(!await showConfirm('确定要退款吗？'))return;
   await fetch(API+'/orders/'+id+'/refund',{method:'POST',headers:h()});toast('退款成功');loadOrders()
 }
 
 async function loadProducts(){
   const[r,c]=await Promise.all([fetch(API+'/products',{headers:h()}),fetch(API+'/categories',{headers:h()})]);
   const d=await r.json();const cd=await c.json();CATS=cd.data||[];
-  document.getElementById('productsList').innerHTML=(d.data||[]).map(p=>'<tr><td>'+p.id+'</td><td><strong>'+p.name+'</strong></td><td>'+catName(p.category_id)+'</td><td>'+money(p.price)+'</td><td>'+p.stock_count+'</td><td>'+p.sales_count+'</td><td>'+(p.is_active?'<span class="tag tag-success">上架</span>':'<span class="tag tag-info">下架</span>')+'</td><td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn btn-sm '+(p.is_active?'btn-danger':'btn-success')+'" onclick="toggleProduct('+p.id+')">'+(p.is_active?'下架':'上架')+'</button></td></tr>').join('')||'<tr><td colspan="8"><div class="empty"><i class="fas fa-box-open"></i><p>暂无商品</p></div></td></tr>';
+  pgInit('products',10);pgSetData('products',d.data||[]);
+  window['_pgRender_products']=()=>pgRender('products',renderProducts,'productsList');
+  window['_pgRenderItems_products']=renderProducts;
+  window['_pgContainer_products']='productsList';
+  pgRender('products',renderProducts,'productsList');
+}
+function renderProducts(items){
+  return items.map(p=>'<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.products.has(p.id)?'checked':'')+' onchange="pgToggle(&apos;products&apos;,'+p.id+',this)"></td><td>'+p.id+'</td><td><strong>'+p.name+'</strong></td><td>'+catName(p.category_id)+'</td><td>'+money(p.price)+'</td><td>'+p.stock_count+'</td><td>'+p.sales_count+'</td><td>'+(p.is_active?'<span class="tag tag-success">上架</span>':'<span class="tag tag-info">下架</span>')+'</td><td class="actions"><button class="btn btn-outline btn-sm" onclick="editProduct('+p.id+')"><i class="fas fa-edit"></i></button><button class="btn btn-sm '+(p.is_active?'btn-danger':'btn-success')+'" onclick="toggleProduct('+p.id+')">'+(p.is_active?'下架':'上架')+'</button></td></tr>').join('');
+}
+async function batchDeleteProducts(){
+  const sel=pgGetSelected('products');
+  if(!sel.length)return;
+  if(!await showConfirm('确定删除选中的 '+sel.length+' 个商品？'))return;
+  for(const id of sel){await fetch(API+'/products/'+id,{method:'DELETE',headers:h()})}
+  toast('已删除 '+sel.length+' 个商品');PG.selected.products.clear();loadProducts()
+}
+async function batchToggleProducts(active){
+  const sel=pgGetSelected('products');
+  if(!sel.length)return;
+  for(const id of sel){await fetch(API+'/products/'+id+'/toggle',{method:'PATCH',headers:h()})}
+  toast('操作成功');PG.selected.products.clear();loadProducts()
 }
 
 function catName(id){const c=CATS.find(x=>x.id===id);return c?c.icon+' '+c.name:'-'}
@@ -709,14 +1162,14 @@ async function editProduct(id){
   document.getElementById('productModalTitle').textContent='编辑商品';
   document.getElementById('p-edit-id').value=p.id;
   document.getElementById('p-name').value=p.name;document.getElementById('p-desc').value=p.description||'';
-  document.getElementById('p-price').value=p.price;document.getElementById('p-original').value=p.original_price||'';
+  document.getElementById('p-price').value=Number(p.price).toFixed(2);document.getElementById('p-original').value=p.original_price?Number(p.original_price).toFixed(2):'';
   document.getElementById('p-category').innerHTML=CATS.map(c=>'<option value="'+c.id+'"'+(c.id===p.category_id?' selected':'')+'>'+c.icon+' '+c.name+'</option>').join('');
   openM('productModal')
 }
 
 async function saveProduct(){
   const id=document.getElementById('p-edit-id').value;
-  const body={category_id:+document.getElementById('p-category').value,name:document.getElementById('p-name').value,description:document.getElementById('p-desc').value,price:+document.getElementById('p-price').value,original_price:+document.getElementById('p-original').value||null};
+  const body={category_id:+document.getElementById('p-category').value,name:document.getElementById('p-name').value,description:document.getElementById('p-desc').value,price:parseFloat(document.getElementById('p-price').value),original_price:parseFloat(document.getElementById('p-original').value)||null};
   if(!body.name||!body.price){toast('请填写商品名称和价格','error');return}
   if(id)await fetch(API+'/products/'+id,{method:'PUT',headers:h(),body:JSON.stringify(body)});
   else await fetch(API+'/products',{method:'POST',headers:h(),body:JSON.stringify(body)});
@@ -738,7 +1191,7 @@ async function saveCategory(){
   closeM('categoryModal');toast('分类已添加');loadCategories()
 }
 
-async function deleteCategory(id){if(!confirm('确定删除此分类？'))return;await fetch(API+'/categories/'+id,{method:'DELETE',headers:h()});toast('分类已删除');loadCategories()}
+async function deleteCategory(id){if(!await showConfirm('确定删除此分类？'))return;await fetch(API+'/categories/'+id,{method:'DELETE',headers:h()});toast('分类已删除');loadCategories()}
 
 async function loadCardProducts(){
   const r=await fetch(API+'/products',{headers:h()});const d=await r.json();
@@ -764,23 +1217,37 @@ async function doImportCards(){
   document.getElementById('importText').value='';toast('成功导入 '+lines.length+' 个卡密');loadCards()
 }
 
-async function deleteCard(pid,cid){if(!confirm('确定删除？'))return;await fetch(API+'/products/'+pid+'/cards/'+cid,{method:'DELETE',headers:h()});toast('已删除');loadCards()}
+async function deleteCard(pid,cid){if(!await showConfirm('确定删除？'))return;await fetch(API+'/products/'+pid+'/cards/'+cid,{method:'DELETE',headers:h()});toast('已删除');loadCards()}
 
 let currentUserId=null;
 
 async function loadUsers(){
   const r=await fetch(API+'/users',{headers:h()});const d=await r.json();
-  renderUsers(d.data||[]);
+  pgInit('users',10);pgSetData('users',d.data||[]);
+  window['_pgRender_users']=()=>pgRender('users',renderUsersItems,'usersList');
+  window['_pgRenderItems_users']=renderUsersItems;
+  window['_pgContainer_users']='usersList';
+  pgRender('users',renderUsersItems,'usersList');
 }
 
 async function searchUsers(){
   const q=document.getElementById('userSearch').value.trim();
   const r=await fetch(API+'/users?search='+encodeURIComponent(q),{headers:h()});const d=await r.json();
-  renderUsers(d.data||[]);
+  pgInit('users',10);pgSetData('users',d.data||[]);
+  PG.page.users=1;PG.selected.users.clear();
+  pgRender('users',renderUsersItems,'usersList');
 }
 
-function renderUsers(users){
-  document.getElementById('usersList').innerHTML=users.map(u=>'<tr><td><code>'+u.user_id+'</code></td><td><strong>'+(u.username||'-')+'</strong><br><small style="color:var(--gray)">'+(u.first_name||'')+'</small></td><td style="color:var(--success);font-weight:600">'+money(u.balance)+'</td><td>'+u.order_count+'</td><td>'+money(u.total_spent)+'</td><td><code>'+(u.invite_code||'-')+'</code></td><td>'+(u.invited_by||'-')+'</td><td><small>'+fmt(u.created_at)+'</small></td><td>'+(u.is_banned?'<span class="tag tag-danger">封禁</span>':'<span class="tag tag-success">正常</span>')+'</td><td class="actions"><button class="btn btn-primary btn-sm" onclick="viewUser('"+u.user_id+"')"><i class="fas fa-eye"></i></button><button class="btn btn-sm '+(u.is_banned?'btn-success':'btn-danger')+'" onclick="toggleBan('"+u.user_id+"',"+(u.is_banned?"true":"false")+")">'+(u.is_banned?'解封':'封禁')+'</button></td></tr>').join('')||'<tr><td colspan="10"><div class="empty"><i class="fas fa-users"></i><p>暂无用户</p></div></td></tr>';
+function renderUsersItems(items){
+  return items.map(u=>'<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.users.has(u.user_id)?'checked':'')+' onchange="pgToggle(&apos;users&apos;,&apos;'+u.user_id+'&apos;,this)"></td><td><code>'+u.user_id+'</code></td><td><strong>'+(u.username||'-')+'</strong><br><small style="color:var(--gray)">'+(u.first_name||'')+'</small></td><td style="color:var(--success);font-weight:600">'+money(u.balance)+'</td><td>'+u.order_count+'</td><td>'+money(u.total_spent)+'</td><td><code>'+(u.invite_code||'-')+'</code></td><td>'+(u.invited_by||'-')+'</td><td><small>'+fmt(u.created_at)+'</small></td><td>'+(u.is_banned?'<span class="tag tag-danger">封禁</span>':'<span class="tag tag-success">正常</span>')+'</td><td class="actions"><button class="btn btn-primary btn-sm" onclick="viewUser('+u.user_id+')"><i class="fas fa-eye"></i></button><button class="btn btn-sm '+(u.is_banned?'btn-success':'btn-danger')+'" onclick="toggleBan('+u.user_id+','+(u.is_banned?'true':'false')+')">'+(u.is_banned?'解封':'封禁')+'</button></td></tr>').join('');
+}
+
+async function batchBanUsers(ban){
+  const sel=pgGetSelected('users');
+  if(!sel.length)return;
+  if(!await showConfirm('确定'+(ban?'封禁':'解封')+'选中的 '+sel.length+' 个用户？'))return;
+  for(const id of sel){await fetch(API+'/users/'+id+'/ban',{method:'POST',headers:h(),body:JSON.stringify({is_banned:ban})})}
+  toast('操作成功');PG.selected.users.clear();loadUsers()
 }
 
 async function viewUser(userId){
@@ -799,12 +1266,17 @@ async function viewUser(userId){
   document.getElementById('ud-amount').value='';
   document.getElementById('ud-reason').value='';
   document.getElementById('ud-orders-list').innerHTML=(u.orders||[]).slice(0,20).map(o=>'<tr><td><code>'+o.order_no+'</code></td><td>'+(o.product_name||'-')+'</td><td>'+money(o.amount)+'</td><td>'+statusTag(o.status)+'</td><td>'+fmt(o.created_at)+'</td></tr>').join('')||'<tr><td colspan="5" style="text-align:center;color:var(--gray)">暂无订单</td></tr>';
+  document.getElementById('ud-redeem-list').innerHTML=(u.redeem_cards||[]).map(c=>'<tr><td><code style="cursor:pointer" onclick="copyRC(this)">'+c.code+'</code></td><td>'+money(c.amount)+'</td><td>'+fmt(c.used_at)+'</td></tr>').join('')||'<tr><td colspan="3" style="text-align:center;color:var(--gray)">暂无充值卡使用记录</td></tr>';
+  document.getElementById('ud-logs-list').innerHTML=(u.logs||[]).map(l=>{let d='';try{d=JSON.parse(l.detail);d=JSON.stringify(d)}catch(e){d=l.detail||'-'}return'<tr><td>'+l.action+'</td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+d.replace(/"/g,'&quot;')+'">'+d+'</td><td>'+fmt(l.created_at)+'</td></tr>'}).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--gray)">暂无操作日志</td></tr>';
+  document.getElementById('ud-my-invite').textContent=u.invite_code||'-';
+  document.getElementById('ud-my-inviter').textContent=u.invited_by||'无';
+  document.getElementById('ud-invited-list').innerHTML=(u.invited_users||[]).map(iu=>'<tr><td><code>'+iu.user_id+'</code></td><td>'+(iu.username||iu.first_name||'-')+'</td><td>'+money(iu.total_spent)+'</td><td>'+fmt(iu.created_at)+'</td></tr>').join('')||'<tr><td colspan="4" style="text-align:center;color:var(--gray)">暂无邀请记录</td></tr>';
   switchUserTab('balance');
   openM('userDetailModal');
 }
 
 function switchUserTab(tab,el){
-  ['balance','orders','edit'].forEach(t=>{document.getElementById('ud-tab-'+t).style.display=t===tab?'block':'none'});
+  ['balance','orders','redeem','logs','invite','edit'].forEach(t=>{const tabEl=document.getElementById('ud-tab-'+t);if(tabEl)tabEl.style.display=t===tab?'block':'none'});
   document.querySelectorAll('.tab-btn').forEach(b=>{b.style.color='var(--gray)';b.style.borderBottom='2px solid transparent'});
   if(el){el.style.color='var(--primary)';el.style.borderBottom='2px solid var(--primary)'}
   else{document.querySelector('.tab-btn').style.color='var(--primary)';document.querySelector('.tab-btn').style.borderBottom='2px solid var(--primary)'}
@@ -813,13 +1285,45 @@ function switchUserTab(tab,el){
 function quickBalance(amount){document.getElementById('ud-amount').value=amount}
 
 async function adjustBalance(){
-  const amount=parseInt(document.getElementById('ud-amount').value);
+  const amount=parseFloat(document.getElementById('ud-amount').value);
   const reason=document.getElementById('ud-reason').value;
   if(!amount){toast('请输入调整金额','error');return}
   const r=await fetch(API+'/users/'+currentUserId+'/balance',{method:'POST',headers:h(),body:JSON.stringify({amount,reason})});
   const d=await r.json();
   if(d.error){toast(d.error,'error');return}
   toast('余额调整成功');viewUser(currentUserId);loadUsers()
+}
+
+async function exportUserData(){
+  if(!currentUserId){toast('请先选择用户','error');return}
+  try{
+    const r=await fetch(API+'/users/'+currentUserId+'/export',{headers:h()});
+    const d=await r.json();
+    if(d.error){toast(d.error,'error');return}
+    const json=JSON.stringify(d.data,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='user_'+currentUserId+'_export_'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('导出成功','success');
+  }catch(e){toast('导出失败: '+e.message,'error')}
+}
+
+async function restoreItem(type,id){
+  if(!confirm('确定要恢复此记录吗？'))return;
+  let url='';
+  if(type==='card'){url=API+'/products/0/cards/'+id+'/restore'}
+  else if(type==='redeem'){url=API+'/redeem-cards/'+id+'/restore'}
+  else{toast('未知类型','error');return}
+  try{
+    const r=await fetch(url,{method:'PATCH',headers:h()});
+    const d=await r.json();
+    if(d.error){toast(d.error,'error');return}
+    toast('恢复成功','success');
+    if(currentUserId)viewUser(currentUserId);
+  }catch(e){toast('恢复失败: '+e.message,'error')}
 }
 
 async function saveUserEdit(){
@@ -834,14 +1338,100 @@ async function saveUserEdit(){
 
 async function toggleBan(uid,banned){
   const isBanned=banned===true||banned==='true';
-  if(!confirm(isBanned?'确定要解封此用户？':'确定要封禁此用户？'))return;
+  if(!await showConfirm(isBanned?'确定要解封此用户？':'确定要封禁此用户？'))return;
   await fetch(API+'/users/'+uid+'/ban',{method:'PATCH',headers:h(),body:JSON.stringify({is_banned:!isBanned})});
   toast(isBanned?'已解封':'已封禁');loadUsers()
+}
+
+function copyRC(el){navigator.clipboard.writeText(el.textContent);toast('已复制')}
+let _genCards=[];
+async function loadRedeemCards(){
+  const r=await fetch(API+'/redeem-cards',{headers:h()});const d=await r.json();
+  if(d.stats){
+    document.getElementById('rc-total').textContent=d.stats.total;
+    document.getElementById('rc-unused').textContent=d.stats.unused;
+    document.getElementById('rc-used').textContent=d.stats.used||0;
+    document.getElementById('rc-total-amount').textContent=money(d.stats.totalAmount||0);
+  }
+  delete PG.allData._redeem_all;
+  document.getElementById('rc-search').value='';
+  document.getElementById('rc-filter').value='all';
+  pgInit('redeem',10);pgSetData('redeem',d.data||[]);
+  window['_pgRender_redeem']=()=>pgRender('redeem',renderRedeemCards,'redeemCardsList');
+  window['_pgRenderItems_redeem']=renderRedeemCards;
+  window['_pgContainer_redeem']='redeemCardsList';
+  pgRender('redeem',renderRedeemCards,'redeemCardsList');
+}
+function filterRedeemCards(){
+  const q=(document.getElementById('rc-search').value||'').trim().toUpperCase();
+  const st=document.getElementById('rc-filter').value;
+  const all=PG.allData._redeem_all||(PG.allData._redeem_all=PG.allData.redeem.slice());
+  let filtered=all;
+  if(st==='unused')filtered=filtered.filter(c=>!c.is_used);
+  else if(st==='used')filtered=filtered.filter(c=>c.is_used);
+  if(q)filtered=filtered.filter(c=>c.code.includes(q));
+  PG.allData.redeem=filtered;
+  PG.page.redeem=1;PG.selected.redeem.clear();
+  pgRender('redeem',renderRedeemCards,'redeemCardsList');
+}
+function renderRedeemCards(items){
+  return items.map(c=>{
+    const st=c.is_used?'<span class="tag tag-info">已使用</span>':'<span class="tag tag-success">未使用</span>';
+    const ud=c.used_by?'<code>'+c.used_by+'</code>':'<span style="color:var(--gray-light)">-</span>';
+    const ut=c.used_at?fmt(c.used_at):'<span style="color:var(--gray-light)">-</span>';
+    const ct=fmt(c.created_at);
+    const del='<button class="btn btn-danger btn-sm" onclick="deleteRedeemCard('+c.id+')"><i class="fas fa-trash"></i></button>';
+    return '<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.redeem.has(c.id)?'checked':'')+' onchange="pgToggle(&apos;redeem&apos;,'+c.id+',this)"></td><td>'+c.id+'</td><td><code style="font-size:12px;cursor:pointer;user-select:all" onclick="copyRC(this)" title="点击复制">'+c.code+'</code></td><td style="font-weight:600;color:var(--primary)">'+money(c.amount)+'</td><td>'+st+'</td><td>'+ud+'</td><td>'+ut+'</td><td>'+ct+'</td><td>'+del+'</td></tr>';
+  }).join('');
+}
+async function batchDeleteRedeemCards(){
+  const sel=pgGetSelected('redeem');
+  if(!sel.length)return;
+  if(!await showConfirm('确定删除选中的 '+sel.length+' 张充值卡？'))return;
+  for(const id of sel){await fetch(API+'/redeem-cards/'+id,{method:'DELETE',headers:h()})}
+  toast('已删除 '+sel.length+' 张充值卡');PG.selected.redeem.clear();loadRedeemCards()
+}
+async function batchCopyRedeemCards(){
+  const sel=pgGetSelected('redeem');
+  if(!sel.length)return;
+  const cards=PG.allData.redeem.filter(c=>sel.includes(c.id)&&!c.is_used);
+  if(!cards.length){toast('选中的都是已使用的卡','error');return}
+  navigator.clipboard.writeText(cards.map(c=>c.code).join('\\n'));
+  toast('已复制 '+cards.length+' 张未使用卡码')
+}
+
+async function generateRedeemCards(){
+  const amount=parseFloat(document.getElementById('rc-amount').value);
+  const count=parseInt(document.getElementById('rc-count').value)||1;
+  if(!amount||amount<=0){toast('请输入有效金额','error');return}
+  if(count<1||count>100){toast('数量范围1-100','error');return}
+  document.getElementById('rc-gen-hint').textContent='生成中...';
+  const r=await fetch(API+'/redeem-cards',{method:'POST',headers:h(),body:JSON.stringify({amount,count})});
+  const d=await r.json();
+  if(d.error){toast(d.error,'error');document.getElementById('rc-gen-hint').textContent='';return}
+  _genCards=d.data||[];
+  document.getElementById('rc-gen-hint').textContent='成功生成 '+_genCards.length+' 张充值卡';
+  setTimeout(()=>{document.getElementById('rc-gen-hint').textContent=''},3000);
+  const resultDiv=document.getElementById('rc-gen-result');
+  resultDiv.style.display='block';
+  document.getElementById('rc-gen-cards').innerHTML=_genCards.map(c=>'<div style="background:var(--light);border:1px solid var(--light-2);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;user-select:all" onclick="copyRC(this)" title="点击复制"><code>'+c.code+'</code> <span style="color:var(--primary);font-weight:600">'+money(c.amount)+'</span></div>').join('');
+  loadRedeemCards()
+}
+function copyAllGenCards(){
+  if(!_genCards.length)return;
+  navigator.clipboard.writeText(_genCards.map(c=>c.code).join('\\n'));
+  toast('已复制 '+_genCards.length+' 张卡码');
+}
+
+async function deleteRedeemCard(id){
+  if(!await showConfirm('确定删除此充值卡？'))return;
+  await fetch(API+'/redeem-cards/'+id,{method:'DELETE',headers:h()});toast('已删除');loadRedeemCards()
 }
 
 async function loadSettings(){
   const r=await fetch(API+'/settings',{headers:h()});const d=await r.json();
   (d.data||[]).forEach(s=>{const el=document.getElementById('set-'+s.key);if(el)el.value=s.value});
+  loadLoginSettings();
 }
 
 async function saveSettings(){
@@ -852,6 +1442,74 @@ async function saveSettings(){
 
 function openM(id){document.getElementById(id).classList.add('show')}
 function closeM(id){document.getElementById(id).classList.remove('show')}
+
+var loginSettings={};
+function loadLoginSettings(){
+  try{
+    var s=localStorage.getItem('login_settings');
+    if(s)loginSettings=JSON.parse(s);
+    document.getElementById('set-login_brand').value=loginSettings.brand||'';
+    document.getElementById('set-login_desc').value=loginSettings.desc||'';
+    document.getElementById('set-login_feat1').value=loginSettings.feat1||'';
+    document.getElementById('set-login_feat2').value=loginSettings.feat2||'';
+    document.getElementById('set-login_feat3').value=loginSettings.feat3||'';
+    document.getElementById('set-login_feat4').value=loginSettings.feat4||'';
+    document.getElementById('set-login_footer').value=loginSettings.footer||'';
+    document.getElementById('set-login_left_bg').value=loginSettings.leftBg||'';
+    document.getElementById('set-login_btn_bg').value=loginSettings.btnBg||'';
+  }catch(e){}
+}
+
+function saveLoginSettings(){
+  loginSettings={
+    brand:document.getElementById('set-login_brand').value,
+    desc:document.getElementById('set-login_desc').value,
+    feat1:document.getElementById('set-login_feat1').value,
+    feat2:document.getElementById('set-login_feat2').value,
+    feat3:document.getElementById('set-login_feat3').value,
+    feat4:document.getElementById('set-login_feat4').value,
+    footer:document.getElementById('set-login_footer').value,
+    leftBg:document.getElementById('set-login_left_bg').value,
+    btnBg:document.getElementById('set-login_btn_bg').value
+  };
+  localStorage.setItem('login_settings',JSON.stringify(loginSettings));
+  applyLoginSettings();
+  toast('Login settings saved','success');
+}
+
+function applyLoginSettings(){
+  var s=loginSettings;
+  if(!s.brand&&!s.desc)return;
+  var b=document.querySelector('.login-page .brand-info h2');
+  if(b&&s.brand)b.innerHTML='<i class="fas fa-rocket"></i> '+s.brand;
+  var d=document.querySelector('.login-page .brand-info .brand-desc');
+  if(d&&s.desc)d.textContent=s.desc;
+  var fs=document.querySelectorAll('.login-page .feature-list li');
+  if(fs[0]&&s.feat1)fs[0].innerHTML='<i class="fas fa-chart-pie"></i> '+s.feat1;
+  if(fs[1]&&s.feat2)fs[1].innerHTML='<i class="fas fa-bolt"></i> '+s.feat2;
+  if(fs[2]&&s.feat3)fs[2].innerHTML='<i class="fas fa-shield-alt"></i> '+s.feat3;
+  if(fs[3]&&s.feat4)fs[3].innerHTML='<i class="fas fa-cloud"></i> '+s.feat4;
+  var ft=document.querySelector('.login-page .brand-footer');
+  if(ft&&s.footer)ft.textContent=s.footer;
+  var cl=document.querySelector('.login-page .card-left');
+  if(cl&&s.leftBg)cl.style.background='linear-gradient(135deg,'+s.leftBg+' 0%,#0f1a24 100%)';
+  var bl=document.querySelector('.login-page .btn-login');
+  if(bl&&s.btnBg)bl.style.background=s.btnBg;
+}
+
+function previewLogin(){
+  saveLoginSettings();
+  window.open(location.origin+'?preview=1','_blank');
+}
+
+function toggleSidebar(){
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('sidebarOverlay');
+  var hb=document.querySelector('.hamburger');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+  if(hb)hb.classList.toggle('open');
+}
 </script>
 </body>
 </html>`;

@@ -82,6 +82,17 @@ export async function handleProductsApi(request, db, path, method, corsHeaders) 
     return jsonResponse({ message: '删除成功' }, 200, corsHeaders);
   }
 
+  // PATCH /api/products/:productId/cards/:cardId/restore - 恢复卡密
+  const cardRestoreMatch = path.match(/^\/api\/products\/(\d+)\/cards\/(\d+)\/restore$/);
+  if (cardRestoreMatch && method === 'PATCH') {
+    const cardId = parseInt(cardRestoreMatch[2]);
+    const result = await db.restoreCard(cardId);
+    if (result.error) {
+      return jsonResponse({ error: result.error }, 400, corsHeaders);
+    }
+    return jsonResponse({ message: '恢复成功' }, 200, corsHeaders);
+  }
+
   // GET /api/categories - 获取分类列表
   if (method === 'GET' && path === '/api/categories') {
     const categories = await db.getCategories();

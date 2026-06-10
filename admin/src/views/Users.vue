@@ -5,7 +5,8 @@
       <span>共 {{ total }} 位用户</span>
     </div>
 
-    <el-table :data="users" v-loading="loading" stripe>
+    <!-- PC端表格 -->
+    <el-table :data="users" v-loading="loading" stripe class="pc-table">
       <el-table-column prop="user_id" label="用户ID" width="150" />
       <el-table-column prop="username" label="用户名" />
       <el-table-column prop="first_name" label="昵称" />
@@ -46,6 +47,41 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 手机端卡片列表 -->
+    <div class="mobile-cards" v-loading="loading">
+      <div v-for="user in users" :key="user.user_id" class="user-card" @click="viewDetail(user)">
+        <div class="user-card-header">
+          <span class="user-name">{{ user.username || user.first_name || '-' }}</span>
+          <el-tag :type="user.is_banned ? 'danger' : 'success'" size="small">
+            {{ user.is_banned ? '已封禁' : '正常' }}
+          </el-tag>
+        </div>
+        <div class="user-card-body">
+          <div class="info-row">
+            <span class="label">ID</span>
+            <span class="value mono">{{ user.user_id }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">余额</span>
+            <span class="value">¥{{ (user.balance / 100).toFixed(2) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">订单</span>
+            <span class="value">{{ user.order_count || 0 }}笔</span>
+          </div>
+          <div class="info-row">
+            <span class="label">消费</span>
+            <span class="value">¥{{ (user.total_spent / 100).toFixed(2) }}</span>
+          </div>
+        </div>
+        <div class="user-card-footer">
+          <span class="invite-code">邀请码: {{ user.invite_code || '-' }}</span>
+          <span class="user-time">{{ formatDate(user.created_at) }}</span>
+        </div>
+      </div>
+      <el-empty v-if="!loading && users.length === 0" description="暂无用户" />
+    </div>
 
     <!-- 用户详情对话框 -->
     <el-dialog v-model="showDetailDialog" title="用户详情" width="700px">
@@ -157,5 +193,108 @@ onMounted(() => {
 
 .header h2 {
   margin: 0;
+}
+
+/* 手机端卡片 */
+.mobile-cards {
+  display: none;
+}
+
+.user-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-card:active {
+  transform: scale(0.98);
+  background: #f5f7fa;
+}
+
+.user-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-card-body {
+  margin-bottom: 10px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.info-row .label {
+  color: #909399;
+}
+
+.info-row .value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.info-row .value.mono {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.user-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .users {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .pc-table {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
 }
 </style>

@@ -39,14 +39,15 @@
       </el-col>
     </el-row>
 
-    <el-table :data="cards" v-loading="loading" stripe style="margin-top: 20px">
+    <!-- PC端表格 -->
+    <el-table :data="cards" v-loading="loading" stripe class="pc-table" style="margin-top: 20px">
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="product_id" label="商品ID" width="100" />
       <el-table-column prop="content" label="卡密内容" show-overflow-tooltip />
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.is_sold ? 'info' : 'success'" size="small">
-            {{ row.is_sold ? '已售' : '可用' }}
+          <el-tag :type="row.is_sold === 1 ? 'info' : row.is_sold === 2 ? 'danger' : 'success'" size="small">
+            {{ row.is_sold === 1 ? '已售' : row.is_sold === 2 ? '已删除' : '可用' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -62,12 +63,38 @@
       </el-table-column>
       <el-table-column label="操作" width="120">
         <template #default="{ row }">
-          <el-button size="small" type="danger" @click="deleteCard(row)" :disabled="row.is_sold">
+          <el-button size="small" type="danger" @click="deleteCard(row)" :disabled="row.is_sold === 1">
             删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 手机端卡片列表 -->
+    <div class="mobile-cards" v-loading="loading">
+      <div v-for="card in cards" :key="card.id" class="card-item-card">
+        <div class="card-item-header">
+          <span class="card-id">#{{ card.id }}</span>
+          <el-tag :type="card.is_sold === 1 ? 'info' : card.is_sold === 2 ? 'danger' : 'success'" size="small">
+            {{ card.is_sold === 1 ? '已售' : card.is_sold === 2 ? '已删除' : '可用' }}
+          </el-tag>
+        </div>
+        <div class="card-item-body">
+          <div class="card-content-text">{{ card.content }}</div>
+          <div class="info-row">
+            <span class="label">订单</span>
+            <span class="value">{{ card.order_id || '-' }}</span>
+          </div>
+        </div>
+        <div class="card-item-footer">
+          <span class="card-time">{{ formatDate(card.created_at) }}</span>
+          <el-button size="small" type="danger" @click="deleteCard(card)" :disabled="card.is_sold === 1">
+            删除
+          </el-button>
+        </div>
+      </div>
+      <el-empty v-if="!loading && cards.length === 0" description="暂无卡密" />
+    </div>
 
     <!-- 批量导入对话框 -->
     <el-dialog v-model="showImportDialog" title="批量导入卡密" width="600px">
@@ -216,5 +243,116 @@ onMounted(() => {
 
 .stat-item .value.info {
   color: #909399;
+}
+
+/* 手机端卡片 */
+.mobile-cards {
+  display: none;
+}
+
+.card-item-card {
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+
+.card-item-card:active {
+  transform: scale(0.98);
+  background: #f5f7fa;
+}
+
+.card-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-id {
+  font-size: 14px;
+  font-weight: 600;
+  color: #409EFF;
+}
+
+.card-item-body {
+  margin-bottom: 10px;
+}
+
+.card-content-text {
+  font-size: 13px;
+  color: #303133;
+  background: #f5f7fa;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  word-break: break-all;
+  font-family: monospace;
+}
+
+.card-item-card .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.card-item-card .info-row .label {
+  color: #909399;
+}
+
+.card-item-card .info-row .value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.card-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.card-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .cards {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  .stat-item .value {
+    font-size: 18px;
+  }
+
+  .pc-table {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  :deep(.el-dialog) {
+    width: 95% !important;
+    margin: 10px auto !important;
+  }
 }
 </style>

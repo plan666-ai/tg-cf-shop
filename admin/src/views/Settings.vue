@@ -104,4 +104,27 @@ onMounted(() => {
   margin-left: 10px;
   color: #909399;
 }
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .settings {
+    padding: 12px;
+  }
+
+  .header h2 {
+    font-size: 18px;
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+
+  :deep(.el-input-number) {
+    width: 100%;
+  }
+
+  :deep(.el-textarea) {
+    width: 100%;
+  }
+}
 </style>

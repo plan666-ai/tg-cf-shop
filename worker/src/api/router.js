@@ -52,6 +52,11 @@ export async function handleApiRequest(request, env) {
       return await handleStatsApi(request, db, path, method, corsHeaders);
     }
 
+    // 充值卡 API
+    if (path.startsWith('/api/redeem-cards')) {
+      return await handleRedeemCardsApi(request, db, path, method, corsHeaders);
+    }
+
     // 配置 API
     if (path.startsWith('/api/settings')) {
       return await handleSettingsApi(request, db, path, method, corsHeaders);
@@ -90,6 +95,58 @@ async function verifyAdminAuth(request, env) {
   } catch {
     return false;
   }
+}
+
+async function handleRedeemCardsApi(request, db, path, method, corsHeaders) {
+  // GET /api/redeem-cards - 获取充值卡列表
+  if (method === 'GET' && path === '/api/redeem-cards') {
+    const url = new URL(request.url);
+    const onlyUnused = url.searchParams.get('unused') === '1';
+    const cards = await db.getRedeemCards(onlyUnused);
+    const stats = await db.getRedeemCardStats();
+    return jsonResponse({ data: cards, stats }, 200, corsHeaders);
+  }
+
+  // POST /api/redeem-cards - 批量生成充值卡
+  if (method === 'POST' && path === '/api/redeem-cards') {
+    const { amount, count } = await request.json();
+    if (!amount || amount <= 0) return jsonResponse({ error: '金额必须大于0' }, 400, corsHeaders);
+    const n = Math.min(count || 1, 100);
+    const cards = [];
+    for (let i = 0; i < n; i++) {
+      cards.push({ code: generateRedeemCode(), amount });
+    }
+    await db.batchCreateRedeemCards(cards);
+    return jsonResponse({ data: cards, message: `成功生成 ${n} 张充值卡` }, 200, corsHeaders);
+  }
+
+  // DELETE /api/redeem-cards/:id - 删除充值卡
+  if (method === 'DELETE' && path.match(/^\/api\/redeem-cards\/\d+$/)) {
+    const id = parseInt(path.split('/').pop());
+    const result = await db.deleteRedeemCard(id);
+    if (result.error) return jsonResponse({ error: result.error }, 400, corsHeaders);
+    return jsonResponse({ message: '删除成功' }, 200, corsHeaders);
+  }
+
+  // PATCH /api/redeem-cards/:id/restore - 恢复充值卡
+  if (method === 'PATCH' && path.match(/^\/api\/redeem-cards\/\d+\/restore$/)) {
+    const id = parseInt(path.split('/')[3]);
+    const result = await db.restoreRedeemCard(id);
+    if (result.error) return jsonResponse({ error: result.error }, 400, corsHeaders);
+    return jsonResponse({ message: '恢复成功' }, 200, corsHeaders);
+  }
+
+  return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
+}
+
+function generateRedeemCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 16; i++) {
+    if (i > 0 && i % 4 === 0) code += '-';
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 async function handleSettingsApi(request, db, path, method, corsHeaders) {

@@ -172,7 +172,7 @@ export class Database {
 
   // 卡密相关
   async getCards(productId, onlyAvailable = false) {
-    let query = 'SELECT * FROM cards WHERE product_id = ?';
+    let query = 'SELECT * FROM cards WHERE product_id = ? AND is_sold != 2';
     if (onlyAvailable) {
       query += ' AND is_sold = 0';
     }
@@ -211,11 +211,24 @@ export class Database {
   }
 
   async deleteCard(id) {
+    // 软删除 - 标记 is_sold=2 表示已删除（0=可用 1=已售 2=已删除）
     const card = await this.db.prepare('SELECT * FROM cards WHERE id = ?').bind(id).first();
-    if (card && !card.is_sold) {
-      await this.db.prepare('DELETE FROM cards WHERE id = ?').bind(id).run();
-      await this.updateProductStock(card.product_id, -1);
+    if (card && card.is_sold !== 1) {
+      await this.db.prepare('UPDATE cards SET is_sold = 2 WHERE id = ?').bind(id).run();
+      if (card.is_sold === 0) {
+        await this.updateProductStock(card.product_id, -1);
+      }
     }
+  }
+
+  async restoreCard(id) {
+    const card = await this.db.prepare('SELECT * FROM cards WHERE id = ?').bind(id).first();
+    if (card && card.is_sold === 2) {
+      await this.db.prepare('UPDATE cards SET is_sold = 0 WHERE id = ?').bind(id).run();
+      await this.updateProductStock(card.product_id, 1);
+      return { success: true };
+    }
+    return { error: 'Card not found or not deleted' };
   }
 
   // 订单相关
@@ -394,11 +407,139 @@ export class Database {
     return result.count;
   }
 
+  async searchUsers(keyword, limit = 50, offset = 0) {
+    const search = `%${keyword}%`;
+    const result = await this.db.prepare(
+      'SELECT * FROM users WHERE user_id LIKE ? OR username LIKE ? OR first_name LIKE ? OR invite_code LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ).bind(search, search, search, search, limit, offset).all();
+    return result.results;
+  }
+
   async getInviteStats(userId) {
     const result = await this.db.prepare(
       'SELECT COUNT(*) as count FROM users WHERE invited_by = ?'
     ).bind(userId).first();
     return result.count;
+  }
+
+  // 充值卡相关
+  async createRedeemCard(code, amount) {
+    await this.db.prepare(
+      'INSERT INTO redeem_cards (code, amount) VALUES (?, ?)'
+    ).bind(code, amount).run();
+  }
+
+  async batchCreateRedeemCards(cards) {
+    const stmt = this.db.prepare('INSERT INTO redeem_cards (code, amount) VALUES (?, ?)');
+    const batch = cards.map(c => stmt.bind(c.code, c.amount));
+    await this.db.batch(batch);
+  }
+
+  async getRedeemCard(code) {
+    return await this.db.prepare(
+      'SELECT * FROM redeem_cards WHERE code = ?'
+    ).bind(code).first();
+  }
+
+  async getRedeemCards(onlyUnused = false, limit = 100, offset = 0) {
+    let query = 'SELECT * FROM redeem_cards WHERE is_used != 2';
+    if (onlyUnused) query += ' AND is_used = 0';
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    const result = await this.db.prepare(query).bind(limit, offset).all();
+    return result.results;
+  }
+
+  async getRedeemCardStats() {
+    const [total, unused, usedAmount, totalAmount] = await Promise.all([
+      this.db.prepare('SELECT COUNT(*) as count FROM redeem_cards WHERE is_used != 2').first(),
+      this.db.prepare('SELECT COUNT(*) as count FROM redeem_cards WHERE is_used = 0').first(),
+      this.db.prepare('SELECT SUM(amount) as total FROM redeem_cards WHERE is_used = 1').first(),
+      this.db.prepare('SELECT SUM(amount) as total FROM redeem_cards WHERE is_used != 2').first(),
+    ]);
+    return { total: total.count, unused: unused.count, used: total.count - unused.count, usedAmount: usedAmount.total || 0, totalAmount: totalAmount.total || 0 };
+  }
+
+  async useRedeemCard(code, userId) {
+    const card = await this.getRedeemCard(code);
+    if (!card) return { error: '兑换码不存在' };
+    if (card.is_used) return { error: '该兑换码已被使用' };
+    await this.db.prepare(
+      'UPDATE redeem_cards SET is_used = 1, used_by = ?, used_at = CURRENT_TIMESTAMP WHERE code = ?'
+    ).bind(userId, code).run();
+    await this.updateUserBalance(userId, card.amount);
+    return { success: true, amount: card.amount };
+  }
+
+  async deleteRedeemCard(id) {
+    // 软删除 - 标记 is_used=2 表示已删除（0=未使用 1=已使用 2=已删除）
+    await this.db.prepare('UPDATE redeem_cards SET is_used = 2 WHERE id = ?').bind(id).run();
+    return { success: true };
+  }
+
+  async restoreRedeemCard(id) {
+    const card = await this.db.prepare('SELECT * FROM redeem_cards WHERE id = ?').bind(id).first();
+    if (card && card.is_used === 2) {
+      await this.db.prepare('UPDATE redeem_cards SET is_used = 0 WHERE id = ?').bind(id).run();
+      return { success: true };
+    }
+    return { error: 'Card not found or not deleted' };
+  }
+
+  async getUserRedeemCards(userId) {
+    const result = await this.db.prepare(
+      'SELECT * FROM redeem_cards WHERE used_by = ? ORDER BY used_at DESC'
+    ).bind(userId).all();
+    return result.results;
+  }
+
+  async getUserLogs(userId) {
+    const result = await this.db.prepare(
+      'SELECT * FROM logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 100'
+    ).bind(userId).all();
+    return result.results;
+  }
+
+  async getInvitedUsers(userId) {
+    const result = await this.db.prepare(
+      'SELECT * FROM users WHERE invited_by = ? ORDER BY created_at DESC'
+    ).bind(userId).all();
+    return result.results;
+  }
+
+  // 导出用户全部数据（含已删除的留底数据）
+  async exportUserData(userId) {
+    const user = await this.getUser(userId);
+    if (!user) return null;
+
+    const orders = await this.db.prepare(
+      'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC'
+    ).bind(userId).all();
+
+    const commissions = await this.db.prepare(
+      'SELECT * FROM commissions WHERE user_id = ? ORDER BY created_at DESC'
+    ).bind(userId).all();
+
+    const redeemCards = await this.db.prepare(
+      'SELECT * FROM redeem_cards WHERE used_by = ? ORDER BY used_at DESC'
+    ).bind(userId).all();
+
+    const logs = await this.db.prepare(
+      'SELECT * FROM logs WHERE user_id = ? ORDER BY created_at DESC'
+    ).bind(userId).all();
+
+    const invitedUsers = await this.db.prepare(
+      'SELECT user_id, username, first_name, created_at FROM users WHERE invited_by = ?'
+    ).bind(userId).all();
+
+    return {
+      user: user,
+      orders: orders.results,
+      commissions: commissions.results,
+      redeem_cards: redeemCards.results,
+      logs: logs.results,
+      invited_users: invitedUsers.results,
+      export_time: new Date().toISOString()
+    };
   }
 }
 
