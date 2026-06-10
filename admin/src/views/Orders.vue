@@ -43,6 +43,7 @@
 
     <!-- PC端表格 -->
     <el-table
+      ref="tableRef"
       :data="orders"
       v-loading="loading"
       stripe
@@ -189,6 +190,7 @@ const searchQuery = ref('')
 const showDetailDialog = ref(false)
 const currentOrder = ref(null)
 const selectedOrders = ref([])
+const tableRef = ref(null)
 
 const selectedIds = computed(() => new Set(selectedOrders.value.map(o => o.id)))
 
@@ -220,6 +222,9 @@ const toggleSelect = (order) => {
 
 const clearSelection = () => {
   selectedOrders.value = []
+  if (tableRef.value) {
+    tableRef.value.clearSelection()
+  }
 }
 
 const viewDetail = (order) => {
