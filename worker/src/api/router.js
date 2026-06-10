@@ -19,13 +19,15 @@ export async function handleApiRequest(request, env) {
   };
 
   try {
-    // 验证管理员认证
+    // 验证管理员认证 (支付回调和登录不需要认证)
+    const publicPaths = ['/api/login', '/api/payment/notify'];
     const authResult = await verifyAdminAuth(request, env);
-    if (!authResult && path !== '/api/login') {
+    if (!authResult && !publicPaths.includes(path)) {
       return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
     }
 
     const db = new Database(env.DB);
+    await db.ensureSuccessfulCountColumn();
 
     // 登录接口
     if (path === '/api/login' && method === 'POST') {
@@ -60,6 +62,11 @@ export async function handleApiRequest(request, env) {
     // 配置 API
     if (path.startsWith('/api/settings')) {
       return await handleSettingsApi(request, db, path, method, corsHeaders);
+    }
+
+    // 支付回调 (不需要认证)
+    if (path === '/api/payment/notify' && method === 'POST') {
+      return await handlePaymentNotify(request, db, env, corsHeaders);
     }
 
     return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
@@ -164,4 +171,63 @@ async function handleSettingsApi(request, db, path, method, corsHeaders) {
   }
 
   return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
+}
+
+// 支付回调处理
+async function handlePaymentNotify(request, db, env, corsHeaders) {
+  try {
+    const formData = await request.formData();
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+      data[key] = value;
+    }
+
+    // 易支付/码支付回调
+    const orderNo = data.out_trade_no;
+    const tradeStatus = data.trade_status;
+
+    if (!orderNo) {
+      return new Response('fail', { status: 400 });
+    }
+
+    const order = await db.getOrderByNo(orderNo);
+    if (!order) {
+      return new Response('fail', { status: 400 });
+    }
+
+    // 支付成功
+    if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'SUCCESS') {
+      if (order.status === 'pending') {
+        // 更新订单状态
+        await db.updateOrderStatus(order.id, 'paid');
+
+        // 获取商品信息并发货
+        const product = await db.getProduct(order.product_id);
+        if (product) {
+          const { deliverOrder } = await import('../services/payment.js');
+          await deliverOrder(db, env, order.id, product, order.quantity);
+        }
+
+        // 处理佣金
+        const user = await db.getUser(order.user_id);
+        if (user && user.invited_by) {
+          const commissionRate = parseInt(await db.getSetting('commission_rate') || '10');
+          await db.createCommission(user.invited_by, order.user_id, order.id, order.amount, commissionRate);
+        }
+
+        // 通知用户
+        const { sendMessage } = await import('../utils/tg.js');
+        await sendMessage(env, order.user_id,
+          `✅ 支付成功！\n\n订单号: <code>${order.order_no}</code>\n\n请查看订单获取卡密信息。`,
+          { inline_keyboard: [[{ text: '📋 查看订单', callback_data: `order_${order.order_no}` }]] }
+        );
+      }
+      return new Response('success', { status: 200 });
+    }
+
+    return new Response('fail', { status: 400 });
+  } catch (error) {
+    console.error('Payment notify error:', error);
+    return new Response('fail', { status: 500 });
+  }
 }

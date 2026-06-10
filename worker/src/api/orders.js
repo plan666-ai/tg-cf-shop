@@ -7,9 +7,10 @@ export async function handleOrdersApi(request, db, path, method, corsHeaders) {
   if (method === 'GET' && path === '/api/orders') {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
+    const search = url.searchParams.get('search');
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const offset = parseInt(url.searchParams.get('offset') || '0');
-    const orders = await db.getOrders(status, limit, offset);
+    const orders = await db.getOrders(status, limit, offset, search);
     return jsonResponse({ data: orders }, 200, corsHeaders);
   }
 
@@ -43,6 +44,23 @@ export async function handleOrdersApi(request, db, path, method, corsHeaders) {
     } catch (error) {
       return jsonResponse({ error: error.message }, 400, corsHeaders);
     }
+  }
+
+  // DELETE /api/orders/:id - 删除订单（不删除用户详情数据）
+  const deleteMatch = path.match(/^\/api\/orders\/(\d+)$/);
+  if (deleteMatch && method === 'DELETE') {
+    const orderId = parseInt(deleteMatch[1]);
+    const order = await db.getOrder(orderId);
+    if (!order) {
+      return jsonResponse({ error: '订单不存在' }, 404, corsHeaders);
+    }
+    // 只允许删除非活跃订单（待支付/已取消/已退款）
+    if (order.status === 'paid' || order.status === 'delivered') {
+      return jsonResponse({ error: '已支付/已完成的订单不可删除，请先退款' }, 400, corsHeaders);
+    }
+    // 软删除：将订单状态标记为 deleted
+    await db.updateOrderStatus(orderId, 'deleted');
+    return jsonResponse({ message: '删除成功' }, 200, corsHeaders);
   }
 
   return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);

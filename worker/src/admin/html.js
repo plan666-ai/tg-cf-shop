@@ -8,6 +8,7 @@ export function getAdminHTML() {
 <title>TG Shop Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --primary: #6366f1;
@@ -196,6 +197,14 @@ tbody tr:last-child td { border-bottom:none; }
 .form-group textarea { resize:vertical; min-height:80px; }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
+/* Toggle Switch */
+.toggle { position:relative; display:inline-block; width:50px; height:26px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:0.3s; border-radius:26px; }
+.toggle .slider:before { position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px; background:white; transition:0.3s; border-radius:50%; }
+.toggle input:checked+.slider { background:var(--primary); }
+.toggle input:checked+.slider:before { transform:translateX(24px); }
+
 /* Toast */
 .toast-container { position:fixed; top:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:10px; }
 .toast { padding:14px 20px; border-radius:10px; color:white; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); animation:slideIn 0.3s; display:flex; align-items:center; gap:10px; min-width:280px; }
@@ -258,6 +267,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
   .content{padding:10px}
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
   .stat-card{padding:12px 10px;border-radius:10px}
+  .stat-value{font-size:18px;word-break:break-all;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .stat-card .value{font-size:20px}
   .stat-card .label{font-size:11px;margin-bottom:0}
   .stat-card .icon{width:32px;height:32px;font-size:14px}
@@ -448,12 +458,9 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><h3><i class="fas fa-history"></i> 最近订单</h3></div>
-          <div class="card-body no-padding">
-            <table>
-              <thead><tr><th>订单号</th><th>用户</th><th>商品</th><th>金额</th><th>状态</th><th>时间</th></tr></thead>
-              <tbody id="recentOrders"></tbody>
-            </table>
+          <div class="card-header"><h3><i class="fas fa-chart-line"></i> 订单趋势 (近7天)</h3></div>
+          <div class="card-body" style="padding:20px">
+            <canvas id="orderChart" height="200"></canvas>
           </div>
         </div>
       </div>
@@ -462,6 +469,18 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
       <div id="page-orders" style="display:none">
         <div class="card" data-pg="orders">
           <div class="card-header"><h3><i class="fas fa-shopping-cart"></i> 全部订单</h3></div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
+            <input id="orderSearch" placeholder="搜索订单号/用户ID/用户名" style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')loadOrders()">
+            <select id="orderStatusFilter" onchange="loadOrders()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="">全部状态</option>
+              <option value="pending">待支付</option>
+              <option value="paid">已支付</option>
+              <option value="delivered">已完成</option>
+              <option value="refunded">已退款</option>
+              <option value="cancelled">已取消</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="loadOrders()"><i class="fas fa-search"></i> 搜索</button>
+          </div>
           <div class="batch-bar" data-batch="orders"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchDeleteOrders()"><i class="fas fa-trash"></i> 批量删除</button></div>
           <div class="card-body no-padding">
             <table>
@@ -626,13 +645,13 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
                 </div>
               </div>
               <button class="btn btn-primary btn-sm" onclick="searchUsers()"><i class="fas fa-search"></i> 搜索</button>
-              <button class="btn btn-outline btn-sm" onclick="document.getElementById('userSearch').value='';loadUsers()"><i class="fas fa-redo"></i> 重置</button>
+              <button class="btn btn-outline btn-sm" onclick="resetUsers()"><i class="fas fa-redo"></i> 重置</button>
             </div>
           </div>
           <div class="batch-bar" data-batch="users"><span class="batch-count">已选择 0 项</span><button class="btn btn-danger btn-sm" onclick="batchBanUsers(true)"><i class="fas fa-ban"></i> 批量封禁</button><button class="btn btn-success btn-sm" onclick="batchBanUsers(false)"><i class="fas fa-check"></i> 批量解封</button></div>
           <div class="card-body no-padding">
             <table>
-              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('users',this)"></th><th>用户ID</th><th>用户名/昵称</th><th>余额</th><th>订单数</th><th>消费总额</th><th>邀请码</th><th>邀请人</th><th>注册时间</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th class="checkbox-col"><input type="checkbox" class="checkbox pg-select-all" onchange="pgToggleAll('users',this)"></th><th>用户ID</th><th>用户名/昵称</th><th>余额</th><th>订单数</th><th>消费成功计次</th><th>邀请码</th><th>邀请人</th><th>注册时间</th><th>状态</th><th>操作</th></tr></thead>
               <tbody id="usersList"></tbody>
             </table>
           </div>
@@ -646,6 +665,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
           <div class="card-body">
             <div class="form-group"><label>商店名称</label><input id="set-shop_name"></div>
             <div class="form-group"><label>欢迎消息</label><textarea id="set-welcome_message" rows="3"></textarea></div>
+            <div class="form-group"><label>消息格式</label><select id="set-welcome_parse_mode"><option value="HTML">HTML</option><option value="MarkdownV2">Markdown</option></select></div>
             <div class="form-group"><label>客服用户名（不带@）</label><input id="set-support_username"></div>
             <div class="form-row">
               <div class="form-group"><label>佣金比例 (%)</label><input id="set-commission_rate" type="number"></div>
@@ -653,6 +673,76 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
             </div>
             <div class="form-group"><label>最低提现金额（元）</label><input id="set-min_withdraw" type="number"></div>
             <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> 保存设置</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><h3><i class="fas fa-wallet"></i> 支付方式配置</h3></div>
+          <div class="card-body">
+            <div style="background:var(--light);padding:16px;border-radius:8px;margin-bottom:16px;border-left:4px solid #f59e0b">
+              <p style="margin:0;color:#92400e;font-size:13px"><i class="fas fa-info-circle"></i> 开启支付方式后，用户在下单时可选择对应方式进行支付</p>
+            </div>
+            <!-- Telegram Stars -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:40px;height:40px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px">⭐</div>
+                  <div><div style="font-weight:600;font-size:15px">Telegram Stars</div><div style="font-size:12px;color:var(--gray)">TG 内置支付，自动发货</div></div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="set-payment_stars_enabled"><span class="slider"></span></label>
+              </div>
+            </div>
+            <!-- USDT -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:40px;height:40px;background:linear-gradient(135deg,#26a17b,#1a8a6a);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px">₮</div>
+                  <div><div style="font-weight:600;font-size:15px">USDT 支付</div><div style="font-size:12px;color:var(--gray)">支持 TRC20 / ERC20 网络</div></div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="set-payment_usdt_enabled"><span class="slider"></span></label>
+              </div>
+              <div id="usdt-fields" style="display:none">
+                <div class="form-row">
+                  <div class="form-group"><label>收款地址</label><input id="set-payment_usdt_address" placeholder="TRC20 收款地址"></div>
+                  <div class="form-group"><label>汇率 (1USDT=?CNY)</label><input id="set-payment_usdt_rate" type="number" step="0.01" placeholder="7.2"></div>
+                </div>
+                <div class="form-group"><label>网络类型</label><select id="set-payment_usdt_network"><option value="TRC20">TRC20</option><option value="ERC20">ERC20</option></select></div>
+              </div>
+            </div>
+            <!-- 易支付 -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:40px;height:40px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white"><i class="fas fa-credit-card"></i></div>
+                  <div><div style="font-weight:600;font-size:15px">易支付</div><div style="font-size:12px;color:var(--gray)">支付宝 / 微信 / QQ 钱包</div></div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="set-payment_yipay_enabled"><span class="slider"></span></label>
+              </div>
+              <div id="yipay-fields" style="display:none">
+                <div class="form-group"><label>接口地址</label><input id="set-payment_yipay_url" placeholder="https://pay.example.com"></div>
+                <div class="form-row">
+                  <div class="form-group"><label>商户ID</label><input id="set-payment_yipay_pid" placeholder="商户ID"></div>
+                  <div class="form-group"><label>商户密钥</label><input id="set-payment_yipay_key" type="password" placeholder="商户密钥"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 码支付 -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:40px;height:40px;background:linear-gradient(135deg,#10b981,#059669);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white"><i class="fas fa-qrcode"></i></div>
+                  <div><div style="font-weight:600;font-size:15px">码支付</div><div style="font-size:12px;color:var(--gray)">扫码支付，自动回调</div></div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="set-payment_codepay_enabled"><span class="slider"></span></label>
+              </div>
+              <div id="codepay-fields" style="display:none">
+                <div class="form-group"><label>接口地址</label><input id="set-payment_codepay_url" placeholder="https://codepay.example.com"></div>
+                <div class="form-row">
+                  <div class="form-group"><label>商户ID</label><input id="set-payment_codepay_id" placeholder="商户ID"></div>
+                  <div class="form-group"><label>商户密钥</label><input id="set-payment_codepay_key" type="password" placeholder="商户密钥"></div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="savePaymentSettings()"><i class="fas fa-save"></i> 保存支付配置</button>
           </div>
         </div>
         <div class="card" style="margin-top:20px">
@@ -679,7 +769,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
 </div>
 
 <!-- Modals -->
-<div id="productModal" class="modal-overlay">
+<div id="productModal" class="modal-overlay" onclick="if(event.target===this)closeM('productModal')">
   <div class="modal">
     <div class="modal-header">
       <h3 id="productModalTitle">添加商品</h3>
@@ -702,7 +792,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
   </div>
 </div>
 
-<div id="categoryModal" class="modal-overlay">
+<div id="categoryModal" class="modal-overlay" onclick="if(event.target===this)closeM('categoryModal')">
   <div class="modal">
     <div class="modal-header">
       <h3>添加分类</h3>
@@ -723,7 +813,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
 </div>
 
 <!-- User Detail Modal -->
-<div id="userDetailModal" class="modal-overlay">
+<div id="userDetailModal" class="modal-overlay" onclick="if(event.target===this)closeM('userDetailModal')">
   <div class="modal" style="width:800px">
     <div class="modal-header">
       <h3><i class="fas fa-user"></i> 用户详情</h3>
@@ -747,7 +837,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
           <div style="font-size:16px;font-weight:600;color:var(--success)" id="ud-balance">-</div>
         </div>
         <div style="background:var(--light);padding:16px;border-radius:8px">
-          <div style="font-size:12px;color:var(--gray);margin-bottom:4px">消费总额</div>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:4px">消费成功计次</div>
           <div style="font-size:16px;font-weight:600;color:var(--primary)" id="ud-spent">-</div>
         </div>
         <div style="background:var(--light);padding:16px;border-radius:8px">
@@ -845,7 +935,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
         </div>
         <div style="font-size:14px;font-weight:600;margin-bottom:8px">邀请的用户</div>
         <table>
-          <thead><tr><th>用户ID</th><th>用户名</th><th>消费总额</th><th>注册时间</th></tr></thead>
+          <thead><tr><th>用户ID</th><th>用户名</th><th>消费成功计次</th><th>注册时间</th></tr></thead>
           <tbody id="ud-invited-list"></tbody>
         </table>
       </div>
@@ -854,7 +944,7 @@ th.checkbox-col, td.checkbox-col { width:44px; text-align:center; padding-left:2
 </div>
 
 <!-- Confirm Dialog -->
-<div id="confirmOverlay" class="confirm-overlay">
+<div id="confirmOverlay" class="confirm-overlay" onclick="if(event.target===this){document.getElementById('confirmOverlay').classList.remove('show')}">
   <div class="confirm-dialog">
     <div class="confirm-icon"><i class="fas fa-exclamation-triangle"></i></div>
     <div class="confirm-msg" id="confirmMsg"></div>
@@ -1070,11 +1160,22 @@ function nav(page){
   if(page==='redeem')loadRedeemCards();
   if(page==='users')loadUsers();
   if(page==='settings')loadSettings();
+  // 手机端点击菜单后自动关闭侧边栏
+  if(window.innerWidth<=768){
+    var sb=document.getElementById('sidebar');
+    var ov=document.getElementById('sidebarOverlay');
+    var hb=document.querySelector('.hamburger');
+    if(sb)sb.classList.remove('open');
+    if(ov)ov.classList.remove('show');
+    if(hb)hb.classList.remove('open');
+  }
 }
+
+var orderChartInstance=null;
 
 async function loadDashboard(){
   try{
-    const[r,o]=await Promise.all([fetch(API+'/stats',{headers:h()}),fetch(API+'/orders?limit=10',{headers:h()})]);
+    const[r,o]=await Promise.all([fetch(API+'/stats',{headers:h()}),fetch(API+'/orders?limit=100',{headers:h()})]);
     const s=await r.json();const od=await o.json();
     if(s.data){
       document.getElementById('s-users').textContent=s.data.totalUsers||0;
@@ -1082,12 +1183,84 @@ async function loadDashboard(){
       document.getElementById('s-revenue').textContent=money(s.data.totalRevenue||0);
       document.getElementById('s-today').textContent=s.data.todayOrders||0;
     }
-    renderRecentOrders(od.data||[]);
+    renderOrderChart(od.data||[]);
   }catch(e){console.error(e)}
 }
 
-function renderRecentOrders(orders){
-  document.getElementById('recentOrders').innerHTML=orders.slice(0,8).map(o=>'<tr><td><code>'+o.order_no+'</code></td><td>'+(o.username||o.user_id)+'</td><td>'+(o.product_name||'-')+'</td><td>'+money(o.amount)+'</td><td>'+statusTag(o.status)+'</td><td>'+fmt(o.created_at)+'</td></tr>').join('')||'<tr><td colspan="6"><div class="empty"><i class="fas fa-inbox"></i><p>暂无订单</p></div></td></tr>';
+function renderOrderChart(orders){
+  var canvas=document.getElementById('orderChart');
+  if(!canvas)return;
+  if(orderChartInstance){orderChartInstance.destroy();orderChartInstance=null}
+  // 统计近7天数据
+  var days=[];var counts=[];var amounts=[];
+  for(var i=6;i>=0;i--){
+    var d=new Date();d.setDate(d.getDate()-i);
+    var ds=d.toISOString().split('T')[0];
+    days.push((d.getMonth()+1)+'/'+d.getDate());
+    var dayOrders=orders.filter(function(o){return o.created_at&&o.created_at.startsWith(ds)});
+    counts.push(dayOrders.length);
+    amounts.push(dayOrders.reduce(function(sum,o){return sum+(o.amount||0)},0));
+  }
+  var ctx=canvas.getContext('2d');
+  orderChartInstance=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:days,
+      datasets:[
+        {
+          label:'订单数',
+          data:counts,
+          borderColor:'#6366f1',
+          backgroundColor:'rgba(99,102,241,0.1)',
+          borderWidth:2.5,
+          tension:0.4,
+          fill:true,
+          pointBackgroundColor:'#6366f1',
+          pointBorderColor:'#fff',
+          pointBorderWidth:2,
+          pointRadius:5,
+          pointHoverRadius:7,
+          yAxisID:'y'
+        },
+        {
+          label:'订单金额(¥)',
+          data:amounts,
+          borderColor:'#22c55e',
+          backgroundColor:'rgba(34,197,94,0.08)',
+          borderWidth:2.5,
+          tension:0.4,
+          fill:true,
+          pointBackgroundColor:'#22c55e',
+          pointBorderColor:'#fff',
+          pointBorderWidth:2,
+          pointRadius:5,
+          pointHoverRadius:7,
+          yAxisID:'y1'
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{usePointStyle:true,padding:16,font:{size:13}}},
+        tooltip:{
+          backgroundColor:'rgba(0,0,0,0.8)',
+          padding:12,
+          cornerRadius:8,
+          titleFont:{size:13},
+          bodyFont:{size:12},
+          callbacks:{label:function(c){return c.dataset.label+': '+(c.datasetIndex===1?'¥'+c.parsed.y.toFixed(2):c.parsed.y+' 单')}}
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:12}}},
+        y:{position:'left',beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:12},stepSize:1},title:{display:true,text:'订单数',font:{size:12}}},
+        y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{font:{size:12},callback:function(v){return '¥'+v}},title:{display:true,text:'金额',font:{size:12}}}
+      }
+    }
+  });
 }
 
 function statusTag(s){
@@ -1097,7 +1270,12 @@ function statusTag(s){
 }
 
 async function loadOrders(){
-  const r=await fetch(API+'/orders',{headers:h()});const d=await r.json();
+  const search=document.getElementById('orderSearch')?.value||'';
+  const status=document.getElementById('orderStatusFilter')?.value||'';
+  let url=API+'/orders?limit=100';
+  if(search)url+='&search='+encodeURIComponent(search);
+  if(status)url+='&status='+encodeURIComponent(status);
+  const r=await fetch(url,{headers:h()});const d=await r.json();
   pgInit('orders',10);pgSetData('orders',d.data||[]);
   window['_pgRender_orders']=()=>pgRender('orders',renderOrders,'ordersList');
   window['_pgRenderItems_orders']=renderOrders;
@@ -1238,8 +1416,13 @@ async function searchUsers(){
   pgRender('users',renderUsersItems,'usersList');
 }
 
+function resetUsers(){
+  document.getElementById('userSearch').value='';
+  loadUsers();
+}
+
 function renderUsersItems(items){
-  return items.map(u=>'<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.users.has(u.user_id)?'checked':'')+' onchange="pgToggle(&apos;users&apos;,&apos;'+u.user_id+'&apos;,this)"></td><td><code>'+u.user_id+'</code></td><td><strong>'+(u.username||'-')+'</strong><br><small style="color:var(--gray)">'+(u.first_name||'')+'</small></td><td style="color:var(--success);font-weight:600">'+money(u.balance)+'</td><td>'+u.order_count+'</td><td>'+money(u.total_spent)+'</td><td><code>'+(u.invite_code||'-')+'</code></td><td>'+(u.invited_by||'-')+'</td><td><small>'+fmt(u.created_at)+'</small></td><td>'+(u.is_banned?'<span class="tag tag-danger">封禁</span>':'<span class="tag tag-success">正常</span>')+'</td><td class="actions"><button class="btn btn-primary btn-sm" onclick="viewUser('+u.user_id+')"><i class="fas fa-eye"></i></button><button class="btn btn-sm '+(u.is_banned?'btn-success':'btn-danger')+'" onclick="toggleBan('+u.user_id+','+(u.is_banned?'true':'false')+')">'+(u.is_banned?'解封':'封禁')+'</button></td></tr>').join('');
+  return items.map(u=>'<tr><td class="checkbox-col"><input type="checkbox" class="checkbox" '+(PG.selected.users.has(u.user_id)?'checked':'')+' onchange="pgToggle(&apos;users&apos;,&apos;'+u.user_id+'&apos;,this)"></td><td><code>'+u.user_id+'</code></td><td><strong>'+(u.username||'-')+'</strong><br><small style="color:var(--gray)">'+(u.first_name||'')+'</small></td><td style="color:var(--success);font-weight:600">'+money(u.balance)+'</td><td>'+u.order_count+'</td><td>'+(u.successful_count||0)+' 次'+'</td><td><code>'+(u.invite_code||'-')+'</code></td><td>'+(u.invited_by||'-')+'</td><td><small>'+fmt(u.created_at)+'</small></td><td>'+(u.is_banned?'<span class="tag tag-danger">封禁</span>':'<span class="tag tag-success">正常</span>')+'</td><td class="actions"><button class="btn btn-primary btn-sm" onclick="viewUser('+u.user_id+')"><i class="fas fa-eye"></i></button><button class="btn btn-sm '+(u.is_banned?'btn-success':'btn-danger')+'" onclick="toggleBan('+u.user_id+','+(u.is_banned?'true':'false')+')">'+(u.is_banned?'解封':'封禁')+'</button></td></tr>').join('');
 }
 
 async function batchBanUsers(ban){
@@ -1257,7 +1440,7 @@ async function viewUser(userId){
   document.getElementById('ud-id').textContent=u.user_id;
   document.getElementById('ud-username').textContent=u.username||u.first_name||'-';
   document.getElementById('ud-balance').textContent=money(u.balance);
-  document.getElementById('ud-spent').textContent=money(u.total_spent);
+  document.getElementById('ud-spent').textContent=(u.successful_count||0)+' 次';
   document.getElementById('ud-invite').textContent=u.invite_code||'-';
   document.getElementById('ud-invitecount').textContent=u.invite_count||0;
   document.getElementById('ud-edit-username').value=u.username||'';
@@ -1270,7 +1453,7 @@ async function viewUser(userId){
   document.getElementById('ud-logs-list').innerHTML=(u.logs||[]).map(l=>{let d='';try{d=JSON.parse(l.detail);d=JSON.stringify(d)}catch(e){d=l.detail||'-'}return'<tr><td>'+l.action+'</td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+d.replace(/"/g,'&quot;')+'">'+d+'</td><td>'+fmt(l.created_at)+'</td></tr>'}).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--gray)">暂无操作日志</td></tr>';
   document.getElementById('ud-my-invite').textContent=u.invite_code||'-';
   document.getElementById('ud-my-inviter').textContent=u.invited_by||'无';
-  document.getElementById('ud-invited-list').innerHTML=(u.invited_users||[]).map(iu=>'<tr><td><code>'+iu.user_id+'</code></td><td>'+(iu.username||iu.first_name||'-')+'</td><td>'+money(iu.total_spent)+'</td><td>'+fmt(iu.created_at)+'</td></tr>').join('')||'<tr><td colspan="4" style="text-align:center;color:var(--gray)">暂无邀请记录</td></tr>';
+  document.getElementById('ud-invited-list').innerHTML=(u.invited_users||[]).map(iu=>'<tr><td><code>'+iu.user_id+'</code></td><td>'+(iu.username||iu.first_name||'-')+'</td><td>'+(iu.successful_count||0)+' 次'+'</td><td>'+fmt(iu.created_at)+'</td></tr>').join('')||'<tr><td colspan="4" style="text-align:center;color:var(--gray)">暂无邀请记录</td></tr>';
   switchUserTab('balance');
   openM('userDetailModal');
 }
@@ -1351,7 +1534,7 @@ async function loadRedeemCards(){
     document.getElementById('rc-total').textContent=d.stats.total;
     document.getElementById('rc-unused').textContent=d.stats.unused;
     document.getElementById('rc-used').textContent=d.stats.used||0;
-    document.getElementById('rc-total-amount').textContent=money(d.stats.totalAmount||0);
+    document.getElementById('rc-total-amount').textContent='¥'+Math.floor(d.stats.totalAmount||0);
   }
   delete PG.allData._redeem_all;
   document.getElementById('rc-search').value='';
@@ -1430,14 +1613,43 @@ async function deleteRedeemCard(id){
 
 async function loadSettings(){
   const r=await fetch(API+'/settings',{headers:h()});const d=await r.json();
-  (d.data||[]).forEach(s=>{const el=document.getElementById('set-'+s.key);if(el)el.value=s.value});
+  (d.data||[]).forEach(s=>{
+    const el=document.getElementById('set-'+s.key);
+    if(el){
+      if(el.type==='checkbox'){el.checked=s.value==='1'}
+      else{el.value=s.value}
+    }
+  });
+  // 支付方式开关联动
+  ['usdt','yipay','codepay'].forEach(p=>{
+    const cb=document.getElementById('set-payment_'+p+'_enabled');
+    const fields=document.getElementById(p+'-fields');
+    if(cb&&fields){fields.style.display=cb.checked?'block':'none';cb.onchange=function(){fields.style.display=this.checked?'block':'none'}}
+  });
   loadLoginSettings();
 }
 
 async function saveSettings(){
-  const keys=['shop_name','welcome_message','support_username','commission_rate','order_expire_minutes','min_withdraw'];
+  const keys=['shop_name','welcome_message','welcome_parse_mode','support_username','commission_rate','order_expire_minutes','min_withdraw'];
   for(const k of keys){const el=document.getElementById('set-'+k);if(el)await fetch(API+'/settings',{method:'PUT',headers:h(),body:JSON.stringify({key:k,value:el.value})})}
   toast('设置已保存')
+}
+
+async function savePaymentSettings(){
+  const keys=[
+    'payment_stars_enabled',
+    'payment_usdt_enabled','payment_usdt_address','payment_usdt_rate','payment_usdt_network',
+    'payment_yipay_enabled','payment_yipay_url','payment_yipay_pid','payment_yipay_key',
+    'payment_codepay_enabled','payment_codepay_url','payment_codepay_id','payment_codepay_key'
+  ];
+  for(const k of keys){
+    const el=document.getElementById('set-'+k);
+    if(el){
+      const val=el.type==='checkbox'?(el.checked?'1':'0'):el.value;
+      await fetch(API+'/settings',{method:'PUT',headers:h(),body:JSON.stringify({key:k,value:val})})
+    }
+  }
+  toast('支付配置已保存')
 }
 
 function openM(id){document.getElementById(id).classList.add('show')}

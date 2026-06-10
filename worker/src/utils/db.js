@@ -3,6 +3,28 @@
 export class Database {
   constructor(db) {
     this.db = db;
+    this._columnChecked = false;
+  }
+
+  // 确保 successful_count 字段存在
+  async ensureSuccessfulCountColumn() {
+    if (this._columnChecked) return;
+    try {
+      // 尝试查询字段，如果不存在会报错
+      const result = await this.db.prepare('SELECT successful_count FROM users LIMIT 1').first();
+      // 如果查询成功，字段存在
+      this._columnChecked = true;
+    } catch (e) {
+      // 字段不存在，尝试添加
+      try {
+        await this.db.prepare('ALTER TABLE users ADD COLUMN successful_count INTEGER DEFAULT 0').run();
+        console.log('Added successful_count column');
+      } catch (e2) {
+        // 字段可能已存在，忽略错误
+        console.log('Column already exists or error:', e2.message);
+      }
+      this._columnChecked = true;
+    }
   }
 
   // 用户相关
@@ -46,6 +68,13 @@ export class Database {
     }
     await this.db.prepare(
       'UPDATE users SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?'
+    ).bind(amount, userId).run();
+    return true;
+  }
+
+  async addBalance(userId, amount) {
+    await this.db.prepare(
+      'UPDATE users SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?'
     ).bind(amount, userId).run();
     return true;
   }
@@ -238,11 +267,27 @@ export class Database {
       'INSERT INTO orders (order_no, user_id, product_id, product_name, quantity, amount, unit_price) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ).bind(orderNo, userId, productId, productName, quantity, amount, unitPrice).run();
 
+    // 只增加订单数，不增加消费总额（消费总额在支付成功后更新）
     await this.db.prepare(
-      'UPDATE users SET order_count = order_count + 1, total_spent = total_spent + ? WHERE user_id = ?'
-    ).bind(amount, userId).run();
+      'UPDATE users SET order_count = order_count + 1 WHERE user_id = ?'
+    ).bind(userId).run();
 
     return await this.getOrder(result.meta.last_row_id);
+  }
+
+  // 支付成功后更新消费总额和成功计次
+  async updateTotalSpent(userId, amount) {
+    // 先确保字段存在
+    await this.ensureSuccessfulCountColumn();
+    
+    // 分开更新两个字段，确保都能成功
+    await this.db.prepare(
+      'UPDATE users SET total_spent = total_spent + ? WHERE user_id = ?'
+    ).bind(amount, userId).run();
+    
+    await this.db.prepare(
+      'UPDATE users SET successful_count = successful_count + 1 WHERE user_id = ?'
+    ).bind(userId).run();
   }
 
   async getOrder(id) {
@@ -259,18 +304,24 @@ export class Database {
 
   async getUserOrders(userId, limit = 20, offset = 0) {
     const result = await this.db.prepare(
-      'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).bind(userId, limit, offset).all();
+      'SELECT * FROM orders WHERE user_id = ? AND status != ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    ).bind(userId, 'deleted', limit, offset).all();
     return result.results;
   }
 
-  async getOrders(status = null, limit = 50, offset = 0) {
-    let query = 'SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.user_id = u.user_id WHERE 1=1';
-    const params = [];
+  async getOrders(status = null, limit = 50, offset = 0, search = null) {
+    let query = 'SELECT o.*, u.username, u.first_name FROM orders o LEFT JOIN users u ON o.user_id = u.user_id WHERE o.status != ?';
+    const params = ['deleted'];
 
     if (status) {
       query += ' AND o.status = ?';
       params.push(status);
+    }
+
+    if (search) {
+      query += ' AND (o.order_no LIKE ? OR o.user_id LIKE ? OR u.username LIKE ? OR u.first_name LIKE ?)';
+      const s = `%${search}%`;
+      params.push(s, s, s, s);
     }
 
     query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
@@ -415,10 +466,10 @@ export class Database {
     return result.results;
   }
 
-  async getInviteStats(userId) {
+  async getInviteStats(inviteCode) {
     const result = await this.db.prepare(
       'SELECT COUNT(*) as count FROM users WHERE invited_by = ?'
-    ).bind(userId).first();
+    ).bind(inviteCode).first();
     return result.count;
   }
 

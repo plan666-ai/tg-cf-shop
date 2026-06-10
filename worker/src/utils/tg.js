@@ -2,11 +2,17 @@
 
 const TG_API = 'https://api.telegram.org/bot';
 
-export async function sendMessage(env, chatId, text, keyboard = null) {
+export async function sendMessage(env, chatId, text, keyboard = null, parseMode = 'HTML') {
+  // 验证 text 参数
+  if (!text || text.trim() === '') {
+    console.error('sendMessage: text is empty');
+    return { ok: false, error: 'text is empty' };
+  }
+
   const body = {
     chat_id: chatId,
     text: text,
-    parse_mode: 'HTML'
+    parse_mode: parseMode
   };
 
   if (keyboard) {
@@ -22,12 +28,18 @@ export async function sendMessage(env, chatId, text, keyboard = null) {
   return resp.json();
 }
 
-export async function editMessage(env, chatId, messageId, text, keyboard = null) {
+export async function editMessage(env, chatId, messageId, text, keyboard = null, parseMode = 'HTML') {
+  // 验证 text 参数
+  if (!text || text.trim() === '') {
+    console.error('editMessage: text is empty');
+    return { ok: false, error: 'text is empty' };
+  }
+
   const body = {
     chat_id: chatId,
     message_id: messageId,
     text: text,
-    parse_mode: 'HTML'
+    parse_mode: parseMode
   };
 
   if (keyboard) {
@@ -43,15 +55,95 @@ export async function editMessage(env, chatId, messageId, text, keyboard = null)
   return resp.json();
 }
 
-export async function deleteMessage(env, chatId, messageId) {
-  await fetch(`${TG_API}${env.BOT_TOKEN}/deleteMessage`, {
+export async function sendMessageWithReplyKeyboard(env, chatId, text, keyboard) {
+  const body = {
+    chat_id: chatId,
+    text: text,
+    parse_mode: 'HTML',
+    reply_markup: keyboard
+  };
+
+  const resp = await fetch(`${TG_API}${env.BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      message_id: messageId
-    })
+    body: JSON.stringify(body)
   });
+
+  return resp.json();
+}
+
+export async function removeReplyKeyboard(env, chatId, text) {
+  const body = {
+    chat_id: chatId,
+    text: text,
+    parse_mode: 'HTML',
+    reply_markup: { remove_keyboard: true }
+  };
+
+  const resp = await fetch(`${TG_API}${env.BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  return resp.json();
+}
+
+export async function sendPhoto(env, chatId, photoUrl, caption, keyboard = null) {
+  const body = {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption: caption,
+    parse_mode: 'HTML'
+  };
+
+  if (keyboard) {
+    body.reply_markup = keyboard;
+  }
+
+  const resp = await fetch(`${TG_API}${env.BOT_TOKEN}/sendPhoto`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  return resp.json();
+}
+
+export async function editMessageCaption(env, chatId, messageId, caption, keyboard = null) {
+  const body = {
+    chat_id: chatId,
+    message_id: messageId,
+    caption: caption,
+    parse_mode: 'HTML'
+  };
+
+  if (keyboard) {
+    body.reply_markup = keyboard;
+  }
+
+  const resp = await fetch(`${TG_API}${env.BOT_TOKEN}/editMessageCaption`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  return resp.json();
+}
+
+export async function deleteMessage(env, chatId, messageId) {
+  try {
+    await fetch(`${TG_API}${env.BOT_TOKEN}/deleteMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId
+      })
+    });
+  } catch (e) {
+    // ignore delete errors
+  }
 }
 
 export async function answerCallback(env, callbackId, text = null) {

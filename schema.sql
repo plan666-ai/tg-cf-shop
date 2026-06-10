@@ -6,10 +6,11 @@ CREATE TABLE IF NOT EXISTS users (
     user_id TEXT UNIQUE NOT NULL,
     username TEXT,
     first_name TEXT,
-    balance INTEGER DEFAULT 0,
+    balance REAL DEFAULT 0,
     invite_code TEXT UNIQUE,
     invited_by TEXT,
-    total_spent INTEGER DEFAULT 0,
+    total_spent REAL DEFAULT 0,
+    successful_count INTEGER DEFAULT 0,
     order_count INTEGER DEFAULT 0,
     is_banned INTEGER DEFAULT 0,
     is_admin INTEGER DEFAULT 0,
@@ -34,8 +35,8 @@ CREATE TABLE IF NOT EXISTS products (
     category_id INTEGER,
     name TEXT NOT NULL,
     description TEXT,
-    price INTEGER NOT NULL,
-    original_price INTEGER,
+    price REAL NOT NULL,
+    original_price REAL,
     stock_count INTEGER DEFAULT 0,
     sales_count INTEGER DEFAULT 0,
     min_quantity INTEGER DEFAULT 1,
@@ -71,8 +72,8 @@ CREATE TABLE IF NOT EXISTS orders (
     product_id INTEGER NOT NULL,
     product_name TEXT,
     quantity INTEGER DEFAULT 1,
-    unit_price INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
+    unit_price REAL NOT NULL,
+    amount REAL NOT NULL,
     payment_method TEXT,
     payment_id TEXT,
     status TEXT DEFAULT 'pending',
@@ -93,15 +94,27 @@ CREATE TABLE IF NOT EXISTS commissions (
     user_id TEXT NOT NULL,
     from_user_id TEXT NOT NULL,
     order_id INTEGER NOT NULL,
-    order_amount INTEGER NOT NULL,
+    order_amount REAL NOT NULL,
     commission_rate INTEGER DEFAULT 10,
-    amount INTEGER NOT NULL,
+    amount REAL NOT NULL,
     status TEXT DEFAULT 'pending',
     settled_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (from_user_id) REFERENCES users(user_id),
     FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+-- 充值卡
+CREATE TABLE IF NOT EXISTS redeem_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,
+    amount REAL NOT NULL,
+    is_used INTEGER DEFAULT 0,
+    used_by TEXT,
+    used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (used_by) REFERENCES users(user_id)
 );
 
 -- 系统配置
@@ -134,6 +147,8 @@ CREATE INDEX IF NOT EXISTS idx_orders_order_no ON orders(order_no);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_commissions_user_id ON commissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
+CREATE INDEX IF NOT EXISTS idx_redeem_cards_code ON redeem_cards(code);
+CREATE INDEX IF NOT EXISTS idx_redeem_cards_is_used ON redeem_cards(is_used);
 
 -- 插入默认配置
 INSERT OR IGNORE INTO settings (key, value, description) VALUES
@@ -143,7 +158,21 @@ INSERT OR IGNORE INTO settings (key, value, description) VALUES
     ('min_withdraw', '1000', '最低提现金额(分)'),
     ('order_expire_minutes', '30', '订单过期时间(分钟)'),
     ('welcome_message', '👋 欢迎来到小店！\n\n请选择：', '欢迎消息'),
-    ('support_username', '', '客服用户名');
+    ('welcome_parse_mode', 'HTML', '欢迎消息格式(HTML/MarkdownV2)'),
+    ('support_username', '', '客服用户名'),
+    ('payment_stars_enabled', '1', 'Stars支付开关'),
+    ('payment_usdt_enabled', '0', 'USDT支付开关'),
+    ('payment_usdt_address', '', 'USDT收款地址(TRC20)'),
+    ('payment_usdt_rate', '7.2', 'USDT汇率(1USDT=?CNY)'),
+    ('payment_usdt_network', 'TRC20', 'USDT网络(TRC20/ERC20)'),
+    ('payment_yipay_enabled', '0', '易支付开关'),
+    ('payment_yipay_url', '', '易支付接口地址'),
+    ('payment_yipay_pid', '', '易支付商户ID'),
+    ('payment_yipay_key', '', '易支付商户密钥'),
+    ('payment_codepay_enabled', '0', '码支付开关'),
+    ('payment_codepay_id', '', '码支付商户ID'),
+    ('payment_codepay_key', '', '码支付商户密钥'),
+    ('payment_codepay_url', '', '码支付接口地址');
 
 -- 插入默认分类
 INSERT OR IGNORE INTO categories (name, icon, sort_order) VALUES

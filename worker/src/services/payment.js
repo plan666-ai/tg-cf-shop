@@ -70,6 +70,9 @@ export async function deliverOrder(db, env, orderId, product, quantity) {
   // 更新商品销量
   await db.incrementSales(product.id, quantity);
 
+  // 更新用户消费成功计次（只有发货成功才算有效次数）
+  await db.updateTotalSpent(order.user_id, order.amount);
+
   // 通知用户
   const user = await db.getUser(order.user_id);
   if (user) {
@@ -111,7 +114,7 @@ export async function refundOrder(db, env, orderId) {
   const user = await db.getUser(order.user_id);
   if (user) {
     await sendMessage(env, user.user_id,
-      `↩️ <b>订单已退款</b>\n\n订单号: <code>${order.order_no}</code>\n退款金额: ¥${(order.amount / 100).toFixed(2)}`,
+      `↩️ <b>订单已退款</b>\n\n订单号: <code>${order.order_no}</code>\n退款金额: ¥${Number(order.amount).toFixed(2)}`,
       { inline_keyboard: [[{ text: '🔙 返回主菜单', callback_data: 'main_menu' }]] }
     );
   }

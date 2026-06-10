@@ -16,9 +16,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="order_count" label="订单数" width="80" />
-      <el-table-column label="消费总额" width="100">
+      <el-table-column label="消费成功计次" width="100">
         <template #default="{ row }">
-          ¥{{ (row.total_spent / 100).toFixed(2) }}
+          {{ row.successful_count || 0 }} 次
         </template>
       </el-table-column>
       <el-table-column prop="invite_code" label="邀请码" width="120" />
@@ -71,8 +71,8 @@
             <span class="value">{{ user.order_count || 0 }}笔</span>
           </div>
           <div class="info-row">
-            <span class="label">消费</span>
-            <span class="value">¥{{ (user.total_spent / 100).toFixed(2) }}</span>
+            <span class="label">消费成功</span>
+            <span class="value">{{ user.successful_count || 0 }}次</span>
           </div>
         </div>
         <div class="user-card-footer">
@@ -91,7 +91,7 @@
         <el-descriptions-item label="昵称">{{ currentUser?.first_name || '-' }}</el-descriptions-item>
         <el-descriptions-item label="余额">¥{{ ((currentUser?.balance || 0) / 100).toFixed(2) }}</el-descriptions-item>
         <el-descriptions-item label="订单数">{{ currentUser?.order_count || 0 }}</el-descriptions-item>
-        <el-descriptions-item label="消费总额">¥{{ ((currentUser?.total_spent || 0) / 100).toFixed(2) }}</el-descriptions-item>
+        <el-descriptions-item label="消费成功计次">{{ currentUser?.successful_count || 0 }} 次</el-descriptions-item>
         <el-descriptions-item label="邀请码">{{ currentUser?.invite_code }}</el-descriptions-item>
         <el-descriptions-item label="邀请人">{{ currentUser?.invited_by || '-' }}</el-descriptions-item>
         <el-descriptions-item label="注册时间">{{ formatDate(currentUser?.created_at) }}</el-descriptions-item>

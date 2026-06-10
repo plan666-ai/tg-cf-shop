@@ -3,6 +3,19 @@
     <div class="header">
       <h2>订单管理</h2>
       <div class="filters">
+        <el-input
+          v-model="searchQuery"
+          placeholder="搜索订单号/用户ID/用户名"
+          clearable
+          style="width: 240px"
+          @keyup.enter="fetchOrders"
+          @clear="fetchOrders"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="fetchOrders">搜索</el-button>
         <el-select v-model="statusFilter" placeholder="订单状态" clearable @change="fetchOrders">
           <el-option label="全部" value="" />
           <el-option label="待支付" value="pending" />
@@ -14,8 +27,29 @@
       </div>
     </div>
 
+    <!-- 批量操作栏 -->
+    <div class="batch-bar" v-if="selectedOrders.length > 0">
+      <span class="batch-info">已选择 <strong>{{ selectedOrders.length }}</strong> 项</span>
+      <div class="batch-actions">
+        <el-button size="small" type="warning" @click="batchCancel">
+          <el-icon><Close /></el-icon> 批量取消
+        </el-button>
+        <el-button size="small" type="danger" @click="batchDelete">
+          <el-icon><Delete /></el-icon> 批量删除
+        </el-button>
+        <el-button size="small" @click="clearSelection">取消选择</el-button>
+      </div>
+    </div>
+
     <!-- PC端表格 -->
-    <el-table :data="orders" v-loading="loading" stripe class="pc-table">
+    <el-table
+      :data="orders"
+      v-loading="loading"
+      stripe
+      class="pc-table"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="50" />
       <el-table-column prop="order_no" label="订单号" width="200" />
       <el-table-column prop="username" label="用户" width="120" />
       <el-table-column prop="product_name" label="商品" />
@@ -46,6 +80,14 @@
         <template #default="{ row }">
           <el-button size="small" @click="viewDetail(row)">详情</el-button>
           <el-button
+            v-if="row.status === 'pending'"
+            size="small"
+            type="warning"
+            @click="cancelOrder(row)"
+          >
+            取消
+          </el-button>
+          <el-button
             v-if="row.status === 'paid' || row.status === 'delivered'"
             size="small"
             type="warning"
@@ -53,20 +95,36 @@
           >
             退款
           </el-button>
+          <el-button
+            v-if="row.status !== 'paid' && row.status !== 'delivered'"
+            size="small"
+            type="danger"
+            @click="deleteOrder(row)"
+          >
+            删除
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <!-- 手机端卡片列表 -->
     <div class="mobile-cards" v-loading="loading">
-      <div v-for="order in orders" :key="order.id" class="order-card" @click="viewDetail(order)">
-        <div class="order-card-header">
-          <span class="order-no">{{ order.order_no }}</span>
+      <div v-for="order in orders" :key="order.id"
+        class="order-card"
+        :class="{ selected: selectedIds.has(order.id) }"
+      >
+        <div class="order-card-header" @click="toggleSelect(order)">
+          <div class="select-area">
+            <div class="checkbox" :class="{ checked: selectedIds.has(order.id) }">
+              <el-icon v-if="selectedIds.has(order.id)"><Check /></el-icon>
+            </div>
+            <span class="order-no">{{ order.order_no }}</span>
+          </div>
           <el-tag :type="getStatusType(order.status)" size="small">
             {{ getStatusText(order.status) }}
           </el-tag>
         </div>
-        <div class="order-card-body">
+        <div class="order-card-body" @click="viewDetail(order)">
           <div class="order-info-row">
             <span class="label">商品</span>
             <span class="value">{{ order.product_name || '-' }}</span>
@@ -83,6 +141,11 @@
         <div class="order-card-footer">
           <span class="order-amount">¥{{ (order.amount / 100).toFixed(2) }}</span>
           <span class="order-time">{{ formatDate(order.created_at) }}</span>
+        </div>
+        <div class="order-card-actions" v-if="selectedIds.has(order.id)">
+          <el-button v-if="order.status === 'pending'" size="small" type="warning" @click.stop="cancelOrder(order)">取消</el-button>
+          <el-button v-if="order.status === 'paid' || order.status === 'delivered'" size="small" type="warning" @click.stop="refundOrder(order)">退款</el-button>
+          <el-button v-if="order.status !== 'paid' && order.status !== 'delivered'" size="small" type="danger" @click.stop="deleteOrder(order)">删除</el-button>
         </div>
       </div>
       <el-empty v-if="!loading && orders.length === 0" description="暂无订单" />
@@ -114,21 +177,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Close, Delete, Check, Search } from '@element-plus/icons-vue'
 import api from '../api/request'
 
 const orders = ref([])
 const loading = ref(false)
 const statusFilter = ref('')
+const searchQuery = ref('')
 const showDetailDialog = ref(false)
 const currentOrder = ref(null)
+const selectedOrders = ref([])
+
+const selectedIds = computed(() => new Set(selectedOrders.value.map(o => o.id)))
 
 const fetchOrders = async () => {
   loading.value = true
   try {
     const params = {}
     if (statusFilter.value) params.status = statusFilter.value
+    if (searchQuery.value) params.search = searchQuery.value
     const res = await api.get('/orders', { params })
     orders.value = res.data
   } finally {
@@ -136,9 +205,37 @@ const fetchOrders = async () => {
   }
 }
 
+const handleSelectionChange = (selection) => {
+  selectedOrders.value = selection
+}
+
+const toggleSelect = (order) => {
+  const idx = selectedOrders.value.findIndex(o => o.id === order.id)
+  if (idx >= 0) {
+    selectedOrders.value.splice(idx, 1)
+  } else {
+    selectedOrders.value.push(order)
+  }
+}
+
+const clearSelection = () => {
+  selectedOrders.value = []
+}
+
 const viewDetail = (order) => {
   currentOrder.value = order
   showDetailDialog.value = true
+}
+
+const cancelOrder = async (order) => {
+  await ElMessageBox.confirm(`确定要取消订单 ${order.order_no} 吗？`, '取消确认')
+  try {
+    await api.post(`/orders/${order.id}/refund`)
+    ElMessage.success('订单已取消')
+    fetchOrders()
+  } catch (error) {
+    // 错误已在拦截器中处理
+  }
 }
 
 const refundOrder = async (order) => {
@@ -146,6 +243,55 @@ const refundOrder = async (order) => {
   try {
     await api.post(`/orders/${order.id}/refund`)
     ElMessage.success('退款成功')
+    fetchOrders()
+  } catch (error) {
+    // 错误已在拦截器中处理
+  }
+}
+
+const deleteOrder = async (order) => {
+  await ElMessageBox.confirm(`确定要删除订单 ${order.order_no} 吗？此操作不可恢复。`, '删除确认', { type: 'warning' })
+  try {
+    await api.delete(`/orders/${order.id}`)
+    ElMessage.success('订单已删除')
+    fetchOrders()
+  } catch (error) {
+    // 错误已在拦截器中处理
+  }
+}
+
+const batchCancel = async () => {
+  const pendingOrders = selectedOrders.value.filter(o => o.status === 'pending')
+  if (pendingOrders.length === 0) {
+    ElMessage.warning('没有可取消的待支付订单')
+    return
+  }
+  await ElMessageBox.confirm(`确定要取消选中的 ${pendingOrders.length} 个待支付订单吗？`, '批量取消')
+  try {
+    for (const order of pendingOrders) {
+      await api.post(`/orders/${order.id}/refund`)
+    }
+    ElMessage.success(`已取消 ${pendingOrders.length} 个订单`)
+    clearSelection()
+    fetchOrders()
+  } catch (error) {
+    // 错误已在拦截器中处理
+  }
+}
+
+const batchDelete = async () => {
+  const deletable = selectedOrders.value.filter(o => o.status !== 'paid' && o.status !== 'delivered')
+  if (deletable.length === 0) {
+    ElMessage.warning('没有可删除的订单（已支付/已完成的订单不可删除）')
+    return
+  }
+  await ElMessageBox.confirm(`确定要删除选中的 ${deletable.length} 个订单吗？此操作不可恢复。`, '批量删除', { type: 'warning' })
+  try {
+    for (const order of deletable) {
+      await api.delete(`/orders/${order.id}`)
+    }
+    ElMessage.success(`已删除 ${deletable.length} 个订单`)
+    clearSelection()
     fetchOrders()
   } catch (error) {
     // 错误已在拦截器中处理
@@ -207,6 +353,38 @@ onMounted(() => {
   gap: 10px;
 }
 
+/* 批量操作栏 */
+.batch-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #ecf5ff;
+  border: 1px solid #d9ecff;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.batch-info {
+  font-size: 14px;
+  color: #409EFF;
+}
+
+.batch-info strong {
+  font-size: 16px;
+}
+
+.batch-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* 手机端卡片 */
 .mobile-cards {
   display: none;
@@ -218,13 +396,16 @@ onMounted(() => {
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 10px;
-  cursor: pointer;
   transition: all 0.2s;
+}
+
+.order-card.selected {
+  border-color: #409EFF;
+  background: #ecf5ff;
 }
 
 .order-card:active {
   transform: scale(0.98);
-  background: #f5f7fa;
 }
 
 .order-card-header {
@@ -232,6 +413,31 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.select-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #dcdfe6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.checkbox.checked {
+  background: #409EFF;
+  border-color: #409EFF;
+  color: white;
+  font-size: 14px;
 }
 
 .order-no {
@@ -285,6 +491,14 @@ onMounted(() => {
   color: #909399;
 }
 
+.order-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
 /* 手机端适配 */
 @media (max-width: 768px) {
   .orders {
@@ -312,6 +526,16 @@ onMounted(() => {
 
   .mobile-cards {
     display: block;
+  }
+
+  .batch-bar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .batch-actions {
+    flex-wrap: wrap;
   }
 
   :deep(.el-dialog) {
