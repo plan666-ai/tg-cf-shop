@@ -214,4 +214,4 @@ MIT License
 
 ## 联系方式
 
-如有问题，请通过 Telegram Bot 联系客服。@planbnitbot
+如有问题，请通过 Telegram Bot 联系作者。[点击联系作者](https://t.me/planbnitbot)
