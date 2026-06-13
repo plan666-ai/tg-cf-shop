@@ -220,5 +220,9 @@ MIT License
 部分页面截图
 <img width="1920" height="971" alt="image" src="https://github.com/user-attachments/assets/fe90a7b8-5df6-490b-b886-f1e5da4ba1d2" />
 <img width="1920" height="971" alt="image" src="https://github.com/user-attachments/assets/612190aa-56c3-4f96-ac1e-701bb2faa178" />
+机器人端
+<img width="697" height="1001" alt="image" src="https://github.com/user-attachments/assets/db53b774-85c9-49e2-9585-cb75f48b5670" />
+项目会持续更新也请各位大佬指出不足让此项目更加完善 有能力二开的开发者朋友也可以拿去二开但不要将此代码进行盈利 出现任何问题和原创作者无关
+
 
 
