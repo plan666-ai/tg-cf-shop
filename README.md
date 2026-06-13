@@ -215,3 +215,10 @@ MIT License
 ## 联系方式
 
 如有问题，请通过 Telegram Bot 联系作者。[点击联系作者](https://t.me/planbnitbot)
+
+
+部分页面截图
+<img width="1920" height="971" alt="image" src="https://github.com/user-attachments/assets/fe90a7b8-5df6-490b-b886-f1e5da4ba1d2" />
+<img width="1920" height="971" alt="image" src="https://github.com/user-attachments/assets/612190aa-56c3-4f96-ac1e-701bb2faa178" />
+
+
